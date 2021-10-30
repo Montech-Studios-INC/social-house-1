@@ -88,7 +88,7 @@ const Token = ({ id, contract }) => {
   }, 3000);
 
   const handle = useFullScreenHandle();
-  console.log(tokenInfo);
+  console.log('tokenInfo', tokenInfo);
   console.log(data)
   return (
     <>
@@ -121,8 +121,8 @@ const Token = ({ id, contract }) => {
               </div> */}
             </div>
           )}
-          {(tokenInfo?.metadata?.mimeType.split("/")[0] === "audio" ||
-            tokenInfo?.metadata?.body?.mimeType.split("/")[0] === "audio") && (
+          {(tokenInfo?.metadata?.mimeType?.split("/")[0] === "audio" ||
+            tokenInfo?.metadata?.body?.mimeType?.split("/")[0] === "audio") && (
               <div
                 className={`my-5 flex flex-row justify-between ${
                   tokenData.fetching ? "" : ""
@@ -132,7 +132,7 @@ const Token = ({ id, contract }) => {
                   <div className='flex flex-col md:flex-row items-center'>
                     <img
                       className='rounded-t-lg w-80 h-80 mb-4 md:mr-4'
-                      src={tokenInfo?.image || tokenInfo.metadata?.body?.artwork?.info?.uri}
+                      src={tokenInfo.metadata?.body?.artwork?.info?.uri || tokenInfo?.image}
                       fallback={noImage}
                     />
                     <ReactAudioPlayer src={data?.zoraNFT.contentURI || tokenInfo?.image} controls />
@@ -146,8 +146,8 @@ const Token = ({ id, contract }) => {
               </div>
             )}
 
-          {(tokenInfo?.metadata?.mimeType.split("/")[0] === "video" ||
-            tokenInfo?.metadata?.body?.mimeType.split("/")[0] === "video") && (
+          {(tokenInfo?.metadata?.mimeType?.split("/")[0] === "video" ||
+            tokenInfo?.metadata?.body?.mimeType?.split("/")[0] === "video") && (
               <div
                 className={`my-5 flex flex-row justify-between ${
                   tokenData.fetching ? "" : ""
