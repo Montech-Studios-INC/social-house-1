@@ -98,7 +98,7 @@ const Token = ({ id, contract }) => {
             tokenData.fetching ? "h-96" : "h-auto"
           } p-10 flex flex-col items-center justify-around`}
         >
-          {(tokenInfo?.metadata?.mimeType?.split("/")[0] === "image" &&
+          {(tokenInfo?.metadata?.mimeType?.split("/")[0] === "image" ||
             !tokenInfo?.metadata?.body) && (
             <div className={`my-5 ${tokenData.fetching ? "" : ""}`}>
               {!tokenData.fetching ? (
