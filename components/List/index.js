@@ -13,6 +13,7 @@ import {
   useWalletButton,
   useWeb3Wallet,
 } from "@zoralabs/simple-wallet-provider";
+import { Row, Col, Progress, Image } from "antd";
 import useSWR from "swr";
 import { useEthers, useEtherBalance } from "@usedapp/core";
 import React, {
@@ -24,11 +25,24 @@ import React, {
 } from "react";
 import { GlobalContext } from '../../contexts/provider';
 import * as actions from '../../contexts/actions';
+import { noImage } from "../../helpers/no-image";
+import Link from "next/link";
+import { useNFT, useZNFT } from '@zoralabs/nft-hooks'
+import ReactPlayer from 'react-player'
+
+const array = [1, 2, 3, 4, 5, 6, 7, 8];
 
 const ListItemComponent = () => {
   const {
     nft: { data },
   } = useContext(NFTDataContext);
+
+  // const { data, error } = useNFT('0x7C2668BD0D3c050703CEcC956C11Bd520c26f7d4', '3223');
+
+  // console.log(data)
+
+
+
 
   const { openManageAuction, openListAuction, openBidAuction } = useManageAuction();
 
@@ -96,24 +110,147 @@ const RenderOwnedList = ({ account, openModal }) => {
     );
   }
 
+
   return data.tokens.map((token) => {
     const tokenInfo = FetchStaticData.getIndexerServerTokenInfo(token);
-    console.log(data)
     return (
-      <NFTPreview
-        id={tokenInfo.tokenId}
-        contract={tokenInfo.tokenContract}
-        initialData={token}
-        useBetaIndexer={true}
-        key={`${tokenInfo.tokenContract}-${tokenInfo.tokenId}`}
-      >
-        <div className="owned-list-item">
-          <PreviewComponents.MediaThumbnail />
-          <div className="list-component-wrapper">
-            <ListItemComponent />
-          </div>
-        </div>
-      </NFTPreview>
+      <div className=" w-full sm:w-full md:w-1/2 lg:w-1/4">
+              <div
+                key={`${tokenInfo.tokenId}`}
+                className=' bg-white mb-5 rounded-lg  border-2 border-gray-100 shadow-md hover:shadow-xd cursor-pointer w-full sm:w-full md:w-11/12'
+              >
+                {(tokenInfo.metadata?.mimeType?.split("/")[0] === "image" ||
+                  !tokenInfo?.metadata?.body &&  tokenInfo.metadata?.mimeType?.split("/")[0] !== "video")  && (
+                  <Image
+                    align='center'
+                    preview={false}
+                    height={300}
+                    width="100%"
+                    className='h-72 w-full object-cover card-img-top rounded-t-lg'
+                    src={tokenInfo.image}
+                    fallback={noImage}
+                  />
+                )}
+                {(tokenInfo.metadata?.mimeType?.split("/")[0] === "video" &&
+                  !tokenInfo?.metadata?.body ) && (
+                  <ReactPlayer width="100%" height="auto" url={tokenInfo?.image} playing loop className=' w-full object-cover card-img-top rounded-t-lg'/>
+                )}
+                  {tokenInfo?.metadata?.body &&
+                    tokenInfo?.metadata?.body?.mimeType.split("/")[0] ===
+                      "audio" && (
+                      <Image
+                        height={300}
+                        width='100%'
+                        preview={false}
+                        className='h-72 w-full object-cover card-img-top rounded-t-lg'
+                        src={tokenInfo.metadata.body.artwork.info.uri}
+                        fallback={noImage}
+                      />
+                    )}
+                  {!tokenInfo?.metadata?.body && tokenInfo?.metadata?.image && (
+                    <Image
+                      height={300}
+                      width='100%'
+                      preview={false}
+                      className='h-72 w-full object-cover card-img-top rounded-t-lg'
+                      src={tokenInfo.metadata.image}
+                      fallback={noImage}
+                    />
+                  )}
+                {!tokenInfo?.metadata?.body && tokenInfo?.metadata?.image && (
+                  <Image
+                    height={300}
+                    width="100%"
+                    preview={false}
+                    className='h-72 w-full object-cover card-img-top rounded-t-lg'
+                    src={tokenInfo.metadata.image}
+                    fallback={noImage}
+                  />
+                )}
+                <Link
+                  href={`/token/${tokenInfo?.tokenContract}/${tokenInfo?.tokenId}`}
+                >
+                  <div className='p-4'>
+                    <Row align='middle' className='mb-2'>
+                      <Col span={12} className='font-bold text-sm'>
+                      {tokenInfo.metadata?.name && tokenInfo.metadata?.name}
+                        {tokenInfo.metadata?.body && tokenInfo.metadata?.body?.title}
+                      </Col>
+                      <Col span={12} align='right'>
+                        {tokenInfo.metadata?.body || tokenInfo.metadata?.mimeType?.split("/")[0] === "audio" && (
+                            <div className='flex items-center justify-center bg-black rounded-full p-2 text-white font-bold w-min'>
+                              <i class="fas fa-volume-up"></i>
+                            </div>
+                          )}
+                        {(tokenInfo.metadata?.mimeType?.split("/")[0] ===
+                          "image" ||
+                          !tokenInfo.metadata?.body &&  tokenInfo.metadata?.mimeType?.split("/")[0] !== "video" && tokenInfo.metadata?.mimeType?.split("/")[0] !== "audio") && (
+                          <div className='flex items-center justify-center bg-black rounded-full p-2 text-white font-bold w-min'>
+                            <i class='fas fa-image'></i>
+                          </div>
+                        )}
+                      {(tokenInfo.metadata?.mimeType?.split("/")[0] === "video" && !tokenInfo?.metadata?.body  ) && (
+                          <div className='flex items-center justify-center bg-black rounded-full p-2 text-white font-bold w-min'>
+                            <i class='fas fa-video'></i>
+                          </div>
+                        )}
+                      </Col>
+                    </Row>
+                      <Row className='w-full mb-5' align='middle'>
+                        <Col>
+                          <img
+                            src='/fpo/favicon.png'
+                            className='w-5 h-5 rounded-full'
+                          />
+                        </Col>
+                        <Col className='ml-2'>Zora</Col>
+                      </Row>
+                      <Row
+                        className='border-t-2 py-2 border-gray-200'
+                        align='middle'
+                      >
+                        {token.nft?.auctionData?.status === "Active" && (
+                          <Col span={12}>
+                            <span className='block text-gray-500 text-md'>
+                              Current Bid
+                            </span>
+                            <span className='font-bold text-md'>
+                              {token?.nft?.auctionData?.currentBid
+                                ? parseFloat(
+                                    formatEther(
+                                      token?.nft?.auctionData?.currentBid
+                                        ?.amount
+                                    )
+                                  ).toFixed(3) + " ETH"
+                                : "N/A"}
+                            </span>
+                          </Col>
+                        )}
+
+                        {token.nft?.auctionData?.status === "Finished" && (
+                          <Col span={12}>
+                            <span className='block text-gray-500 text-md'>
+                              Sold at
+                            </span>
+                            <span className='font-bold text-md'>
+                              {token?.nft?.tokenData?.auctions[0].lastBidAmount
+                                ? parseFloat(
+                                    formatEther(
+                                      token?.nft?.tokenData?.auctions[0]
+                                        .lastBidAmount
+                                    )
+                                  ).toFixed(3) + " ETH"
+                                : "N/A"}
+                            </span>
+                          </Col>
+                        )}
+
+                      </Row>
+                    </div>
+                  </Link>
+                  <ListItemComponent />
+                </div>
+      </div>
     );
   });
 };
@@ -140,9 +277,9 @@ const MediaThumbnailPreview = ({
 };
 
 export default function List() {
-  const { activateBrowserWallet, account, chainId, error, deactivate, activate } = useEthers();
+  const { activateBrowserWallet, account, chainId, deactivate, activate } = useEthers();
   const [isloggedin, setIsloggedin] = useState(false)
-  
+
   useEffect(()=>{
     if(account !== null && account !== undefined){
         setIsloggedin(true)
@@ -161,14 +298,20 @@ export default function List() {
     // setIsModalVisible(true);
     actions.changeAuthModal(!showModal)(setShowModal);
   };
+
+  const { data, error } = useNFT('0x8d04a8c79ceb0889bdd12acdf3fa9d207ed3ff63', '2')
+
+  console.log(data)
+
   return (
     <>
           {account ?
-          <div className="p-20 flex flex-row items-center w-full justify-around">
-            <div className="owned-list mt-20">
+                <div
+                className='overflow-y-auto flex flex-wrap mt-28 px-10'
+                style={{ height: "82vh" }}
+              >
               <RenderOwnedList account={account} openModal={openModal} />
             </div>
-          </div>
           :
           <div className="mt-20 flex flex-col justify-around items-center">
               <p className="text-4xl font-bold text-center my-4 w-1/2">Connect your wallet to list your NFT</p>

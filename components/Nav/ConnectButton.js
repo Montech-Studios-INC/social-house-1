@@ -8,6 +8,7 @@ import { Row, Col, Modal} from "antd";
 import { wallets } from "./dummyData";
 import { Menu, Dropdown } from 'antd';
 import * as actions from '../../contexts/actions';
+import detectEthereumProvider from '@metamask/detect-provider';
 
 // import ConnectWalletModal from './MetaMask';
 
@@ -49,20 +50,26 @@ export default function ConnectButton({ handleOpenModal }) {
     '4': 'Rinkeby'
   }
 
+  useEffect(async()=>{
+    const provider = await detectEthereumProvider();
+    if (provider) {
 
-  useEffect(()=>{
-    if ((account !== null || account !== undefined) && (chainId?.toString() !== process.env.NEXT_PUBLIC_NETWORK_ID)){
-      deactivate();
-      setError(`Unsopported Chain, connect to ${networks[parseInt(process.env.NEXT_PUBLIC_NETWORK_ID)]} chain`)
-    }
-    else{
-      setError('');
-    }
-    if(error){
-      setError('User Denied permission!')
-    }
 
-  },[chainId, account, error, library])
+      window.ethereum.on('chainChanged', (chainId) => {
+        if(parseInt(chainId, 16) !== parseInt(process.env.NEXT_PUBLIC_NETWORK_ID)){
+          deactivate();
+          setError(`Unsopported Chain, connect to ${networks[parseInt(process.env.NEXT_PUBLIC_NETWORK_ID)]} chain`)
+        }
+        else{
+          setError('');
+          activateBrowserWallet();
+        }
+      });
+      
+    } else {
+      setError('Please install MetaMask!')
+    }
+  }, [chainId, account, error, library])
   
   const [isModalVisible, setIsModalVisible] = useState(false);
 

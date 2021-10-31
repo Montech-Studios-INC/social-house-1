@@ -165,20 +165,30 @@ const Mint = () => {
       100 - creatorPercentage, // owner share percentage
       0 // prevOwner share percentage
     );
-    const tx = await zora.mint(mediaData, bidShares);
-    console.log(tx)
-    if(tx){
-      setMintLoading(false)
-      notification['success']({
-        message: `Succefully Minted ${name} NFT`,
-        description:
-          'it will take upto  a minute for it to be displayed among your NFTs!',
+      zora.mint(mediaData, bidShares)
+      .then((tx)=>{
+        if(tx){
+          setMintLoading(false)
+          notification['success']({
+            message: `Succefully Minted ${name} NFT`,
+            description:
+              'it will take upto  a minute for it to be displayed among your NFTs!',
+          });
+          setTimeout(() => {
+            router.push('/list')
+          }, 3000);
+  
+      }
+      }).catch((error)=>{
+        console.log(error.message)
+        notification['error']({
+          message: `Failed to Mint ${name} NFT`,
+          description:
+          error.message.length >= 50 ? 'a token has already been created with this content hash' : error.message,
+        });
       });
-      setTimeout(() => {
-        router.push('/list')
-      }, 3000);
 
-    }
+    
     return new Promise((resolve) => {
       // This listens for the nft transfer event
       zora.media.on(

@@ -27,6 +27,10 @@ export default function CreateAuctionHouseApp({Component,pageProps}) {
       <GlobalStyles />
       <GlobalProvider>
       <DAppProvider config={config}>
+      <Web3ConfigProvider
+        networkId={parseInt(process.env.NEXT_PUBLIC_NETWORK_ID, 10)}
+        rpcUrl={process.env.NEXT_PUBLIC_RPC_URL  || undefined}
+      >
         <MediaConfiguration
           networkId={process.env.NEXT_PUBLIC_NETWORK}
           style={mediaConfigurationStyles}
@@ -35,7 +39,7 @@ export default function CreateAuctionHouseApp({Component,pageProps}) {
             <Component {...pageProps} />
           </main>
         </MediaConfiguration>
-
+      </ Web3ConfigProvider >
       </DAppProvider>
       </GlobalProvider>
     </>

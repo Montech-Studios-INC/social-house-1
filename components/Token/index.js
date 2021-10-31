@@ -89,7 +89,7 @@ const Token = ({ id, contract }) => {
 
   const handle = useFullScreenHandle();
   console.log('tokenInfo', tokenInfo);
-  console.log(data)
+  console.log(contract, id)
   return (
     <>
       <div className='flex flex-col '>
@@ -99,7 +99,7 @@ const Token = ({ id, contract }) => {
           } p-10 flex flex-col items-center justify-around`}
         >
           {(tokenInfo?.metadata?.mimeType?.split("/")[0] === "image" ||
-            !tokenInfo?.metadata?.body) && (
+            !tokenInfo?.metadata?.body && tokenInfo?.metadata?.mimeType?.split("/")[0] !== "audio") && (
             <div className={`my-5 ${tokenData.fetching ? "" : ""}`}>
               {!tokenData.fetching ? (
                 <Image
