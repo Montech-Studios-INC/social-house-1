@@ -29,7 +29,7 @@ const menu = (
 
 
 export default function ConnectButton({ handleOpenModal }) {
-  const { activateBrowserWallet, account, chainId, error, deactivate, activate } = useEthers();
+  const { activateBrowserWallet, account, chainId, error, deactivate, activate, active, library } = useEthers();
   const etherBalance = useEtherBalance(account);
   const [connectError, setError] = useState(null)
 
@@ -49,8 +49,9 @@ export default function ConnectButton({ handleOpenModal }) {
     '4': 'Rinkeby'
   }
 
+
   useEffect(()=>{
-    if ((chainId?.toString() !== process.env.NEXT_PUBLIC_NETWORK_ID)){
+    if ((account !== null || account !== undefined) && (chainId?.toString() !== process.env.NEXT_PUBLIC_NETWORK_ID)){
       deactivate();
       setError(`Unsopported Chain, connect to ${networks[parseInt(process.env.NEXT_PUBLIC_NETWORK_ID)]} chain`)
     }
@@ -61,7 +62,7 @@ export default function ConnectButton({ handleOpenModal }) {
       setError('User Denied permission!')
     }
 
-  },[chainId, account])
+  },[chainId, account, error, library])
   
   const [isModalVisible, setIsModalVisible] = useState(false);
 

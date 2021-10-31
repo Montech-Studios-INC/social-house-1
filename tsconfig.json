@@ -15,6 +15,6 @@
     "jsx": "preserve",
     "jsxImportSource": "@emotion/react",
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "components/AuctionsList.js", "components/Nav/Identicon.js", "components/Nav/ConnectButton.js", "pages/_app.js", "pages/mint.js"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "components/AuctionsList.js", "components/Nav/Identicon.js", "components/Nav/ConnectButton.js", "pages/_app.js", "pages/mint.tsx"],
   "exclude": ["node_modules"]
 }

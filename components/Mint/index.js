@@ -93,9 +93,11 @@ const Mint = () => {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         setSigner(provider.getSigner());
         // other stuff using provider here
+        console.log(window.ethereum)
     }
   }, []);
 
+  
   console.log(mintLoading)
 
   async function uploadToDecentralizedStorage(data) {
@@ -170,9 +172,12 @@ const Mint = () => {
       notification['success']({
         message: `Succefully Minted ${name} NFT`,
         description:
-          'it will take upto  a minute for it to be displayed!',
+          'it will take upto  a minute for it to be displayed among your NFTs!',
       });
-      router.push('/list')
+      setTimeout(() => {
+        router.push('/list')
+      }, 3000);
+
     }
     return new Promise((resolve) => {
       // This listens for the nft transfer event
@@ -211,7 +216,12 @@ useEffect(()=>{
       setTextLoading(false)
     }, 10000)
   }
-}, [Imgupload, Videoupload, Textupload, Audioupload])
+  if(mintLoading === true){
+    setTimeout(()=>{
+      setMintLoading(false)
+    }, 10000)
+  }
+}, [Imgupload, Videoupload, Textupload, Audioupload, mintLoading])
 
 const {
   showModalState: {
@@ -237,7 +247,7 @@ useEffect(()=>{
  const { Dragger } = Upload;
 
  const uploadAudio = () => {
-  if(bufferAudio){
+  if(bufferAudio !== '' && audioUrl === ''){
     ipfs.files.add(bufferAudio, (error, result) => {
       if(error) {
         console.error(error)
@@ -254,7 +264,7 @@ useEffect(()=>{
  }
 
  const uploadVideo = () => {
-  if(bufferVideo){
+  if(bufferVideo !== '' && videoUrl === ''){
     ipfs.files.add(bufferVideo, (error, result) => {
       if(error) {
         console.error(error)
@@ -270,7 +280,7 @@ useEffect(()=>{
  }
 
  const uploadText = () => {
-  if(bufferText){
+  if(bufferText !== '' && textUrl === ''){
     ipfs.files.add(bufferText, (error, result) => {
       if(error) {
         console.error(error)
@@ -287,7 +297,7 @@ useEffect(()=>{
 
 
  const uploadImage = () => {
-  if(buffer){
+  if(buffer !== '' && fileUrl === ''){
     ipfs.files.add(buffer, (error, result) => {
       if(error) {
         console.error(error)
@@ -303,7 +313,7 @@ useEffect(()=>{
  const propsImage = {
    name: 'file',
    multiple: false,
-   action: Imgupload === true ? uploadImage() : '',
+   action: (Imgupload === true && buffer !== '') ? uploadImage() : '',
   onChange(info) {
     const { status, type } = info.file;
     setFIleType(type)
@@ -312,8 +322,6 @@ useEffect(()=>{
     }
     if (status === 'done' && type.split('/')[0].toLowerCase() == 'image') {
       message.success(`${info?.file?.name} file uploaded successfully.`);
-    } else if (status === 'error') {
-      message.error(`${info?.file?.name} file upload failed.`);
     }
   },
   onDrop(e) {
@@ -346,8 +354,6 @@ useEffect(()=>{
    }
    if (status === 'done' && type.split('/')[0].toLowerCase() == 'audio') {
      message.success(`${info?.file?.name} file uploaded successfully.`);
-   } else if (status === 'error') {
-     message.error(`${info?.file?.name} file upload failed.`);
    }
  },
  onDrop(e) {
@@ -371,7 +377,7 @@ useEffect(()=>{
 const propsText = {
   name: 'file',
   multiple: false,
-  action: Textupload === true ? uploadText() : '',
+  action: Textupload === true ?  uploadText() : '',
  onChange(info) {
    const { status, type } = info.file;
    setContentType(type)
@@ -379,8 +385,6 @@ const propsText = {
    }
    if (status === 'done' && type.split('/')[0].toLowerCase() == 'text') {
      message.success(`${info?.file?.name} file uploaded successfully.`);
-   } else if (status === 'error') {
-     message.error(`${info?.file?.name} file upload failed.`);
    }
  },
  onDrop(e) {
@@ -404,7 +408,7 @@ const propsText = {
 const propsVideo = {
   name: 'file',
   multiple: false,
-  action: Videoupload === true ? uploadVideo(): '',
+  action: Videoupload === true ? uploadVideo() : '',
  onChange(info) {
    const { status, type } = info.file;
    setContentType(type)
@@ -413,8 +417,6 @@ const propsVideo = {
    }
    if (status === 'done' && type.split('/')[0].toLowerCase() == 'video') {
      message.success(`${info?.file?.name} file uploaded successfully.`);
-   } else if (status === 'error') {
-     message.error(`${info?.file?.name} file upload failed.`);
    }
  },
  onDrop(e) {
@@ -443,18 +445,6 @@ const propsVideo = {
   const prev = () => {
     setCurrent(current - 1);
   };
-
-  const handleSubmit = () =>{ 
-    if ((fileUrl !== '' || content !== '') !== '' && feePercantage <= 100){ 
-    mintZNFT(
-    content,
-    contentType !== '' ? contentType : fileType,
-    name,
-    Description,
-    fileUrl, feePercantage,
-    setMintLoading) 
-
-  }}
 
   return (
     <>
@@ -491,6 +481,8 @@ const propsVideo = {
                   </p></>
                     )}
                     {fileUrl && buffer && Imgupload && ImgLoading === false && (
+                      <>
+                    <p className="text-gray-400">Your image preview loading ...</p>
                   <div className="flex flex-row justify-around">
                     <Image
                   width='20%'
@@ -499,6 +491,7 @@ const propsVideo = {
                   preview={false}
                 />
                   </div>
+                  </>
                 )}
                 {ImgLoading && (
                    <div className="flex flex-row justify-around">
@@ -525,9 +518,12 @@ const propsVideo = {
                   </p></>
                     )}
                     {audioUrl && bufferAudio && Audioupload && AudioLoading === false && (
+                      <>
+                    <p className="text-gray-400">Your Audio preview loading ...</p>
                   <div className="flex flex-row justify-around">
                  <ReactAudioPlayer src={audioUrl} controls autoPlay/>
                   </div>
+                  </>
                 )}
                 {AudioLoading && (
                    <div className="flex flex-row justify-around">
@@ -553,6 +549,8 @@ const propsVideo = {
                   </p></>
                     )}
                     {videoUrl && bufferVideo && Videoupload && VideoLoading === false && (
+                      <>
+                       <p className="text-gray-400">Your Video preview loading ...</p>
                   <div className="flex flex-row justify-around">
                    <ReactPlayer url={videoUrl} className='h-72 w-full object-cover card-img-top rounded-t-lg'/>
                    {/* <Player
@@ -560,6 +558,7 @@ const propsVideo = {
                     src={videoUrl}
                   /> */}
                   </div>
+                  </>
                 )}
                 {VideoLoading && (
                    <div className="flex flex-row justify-around">
@@ -585,9 +584,12 @@ const propsVideo = {
                   </p></>
                     )}
                     {textUrl && bufferText && Textupload && TextLoading === false && (
+                      <>
+                     <p className="text-gray-400">Your Text preview loading ...</p>
                   <div className="flex flex-row justify-around">
                   <DocViewer documents={[{ uri: textUrl }]} />
                   </div>
+                  </>
                 )}
                 {TextLoading && (
                    <div className="flex flex-row justify-around">
@@ -704,8 +706,18 @@ const propsVideo = {
             </button>
         )}
         {current === steps.length - 1 && (
-          <button onClick={()=>{handleSubmit()}}
-            className={`bg-black text-white font-bold rounded px-4 py-2 outline-none w-1/6 mt-2 ${((fileUrl !== '' || content !== '') !== '' && feePercantage <= 100) ? '' : 'bg-gray-600 cursor-not-allowed'}`}>
+          <Button onClick={()=>{
+            if(fileUrl !== '' && feePercantage <= 100){
+            mintZNFT(
+              content,
+              contentType !== '' ? contentType : fileType,
+              name,
+              Description,
+              fileUrl, feePercantage,
+              setMintLoading)
+          }}
+        }
+            className={` ${((fileUrl !== '' || content !== '') !== '' && feePercantage <= 100) ? '' : 'bg-gray-600 cursor-not-allowed'}`}>
           {!mintLoading ? (
             "Mint NFT"
           ) : (
@@ -715,7 +727,7 @@ const propsVideo = {
                 src='/images/spinner.png'
               />
             </Row>)}
-          </button>
+          </Button>
         )}
         {current > 0 && (
           <Button style={{ margin: '0 8px' }} onClick={() => prev()}>
