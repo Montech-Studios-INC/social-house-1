@@ -13,7 +13,8 @@ import {
   useWalletButton,
   useWeb3Wallet,
 } from "@zoralabs/simple-wallet-provider";
-import { Row, Col, Progress, Image } from "antd";
+import { Row, Col, Progress, Image, notification } from "antd";
+import { formatEther, parseEther } from "@ethersproject/units";
 import useSWR from "swr";
 import { useEthers, useEtherBalance } from "@usedapp/core";
 import React, {
@@ -58,7 +59,7 @@ const NFTModal = ({token, tokenInfo}) => {
 
   return (
     <>
-      <button onClick={()=>{showModal(token)}} className={`bg-black text-white font-bold rounded px-4 py-2 outline-none w-full mt-2`} >Action</button>
+      <Link href={`action/${token.nft.tokenData.address}/${token.nft.tokenData.tokenId}`}><button className={`bg-black text-white font-bold rounded px-4 py-2 outline-none w-full mt-2`} >Action</button></Link>
       <Modal title="Basic Modal" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
         <div>
           <div className="flex flex-row justify-between">
@@ -79,7 +80,6 @@ const ListItemComponent = () => {
   // const { data, error } = useNFT('0x7C2668BD0D3c050703CEcC956C11Bd520c26f7d4', '3223');
 
   // console.log(data)
-
   const { openManageAuction, openListAuction, openBidAuction } =
     useManageAuction();
 
@@ -123,6 +123,7 @@ const RenderOwnedList = ({ account, openModal }) => {
     fetch(url).then((res) => res.json())
   );
 
+
   if (!data) {
     // loading
     return <Fragment />;
@@ -143,16 +144,13 @@ const RenderOwnedList = ({ account, openModal }) => {
           get started.
         </p>
         <div className='flex flex-row justify-between'>
-          <button
-            className={`bg-black text-white font-bold rounded px-4 py-2 outline-none w-max mt-2 mr-4`}
-          >
-            Switch wallet
-          </button>
+          <a href="/">
           <button
             className={`bg-black text-white font-bold rounded px-4 py-2 outline-none w-max mt-2`}
           >
             Explore marketplace
           </button>
+          </a>
         </div>
       </div>
     );
@@ -164,7 +162,7 @@ const RenderOwnedList = ({ account, openModal }) => {
   return data.tokens.map((token) => {
     const tokenInfo = FetchStaticData.getIndexerServerTokenInfo(token);
     return (
-      <div className=' w-full sm:w-full md:w-1/2 lg:w-1/4'>
+      <div className='w-full mx-2 sm:w-full md:w-1/2 lg:w-1/4 my-2'>
         <div
           key={`${tokenInfo.tokenId}`}
           className=' bg-white mb-5 rounded-lg flex flex-row flex-wrap border-2 border-gray-100 shadow-md hover:shadow-xd cursor-pointer w-full sm:w-full md:w-11/12'
@@ -227,7 +225,7 @@ const RenderOwnedList = ({ account, openModal }) => {
           <Link
             href={`/token/${tokenInfo?.tokenContract}/${tokenInfo?.tokenId}`}
           >
-            <div className='p-4'>
+            <div className='p-4 w-full'>
               <Row align='middle' className='mb-2'>
                 <Col span={12} className='font-bold text-sm'>
                   {tokenInfo.metadata?.name && tokenInfo.metadata?.name}
@@ -285,6 +283,17 @@ const RenderOwnedList = ({ account, openModal }) => {
                   </Col>
                 )}
 
+                {(token.nft?.auctionData?.status === "Finished" || token.nft?.auctionData?.status === "Pending" || true)  && (
+                  <Col span={12}>
+                    <span className='block text-gray-500 text-md'>
+                      Status 
+                    </span>
+                    <span className='font-bold text-md'>
+                      {token.nft?.auctionData?.status ? token.nft?.auctionData?.status : 'No status'}
+                    </span>
+                  </Col>
+                )}
+
                       </Row>
                     </div>
                   </Link>
@@ -321,19 +330,21 @@ export default function List() {
       setIsloggedin(false);
     }
   }, [account, chainId]);
+
   const {
     showModalState: { showModal },
     setShowModal,
   } = useContext(GlobalContext);
+  
   const openModal = () => {
     // setIsModalVisible(true);
     actions.changeAuthModal(!showModal)(setShowModal);
   };
-
+  
   return (
     <>
       {account ? (
-        <div className='pt-28 mx-10 w-screen h-screen'>
+        <div className='pt-28 w-screen h-screen flex flex-row flex-wrap justify-around'>
           <RenderOwnedList account={account} openModal={openModal} />
         </div>
       ) : (

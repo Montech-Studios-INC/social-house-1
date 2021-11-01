@@ -113,11 +113,16 @@ const Mint = () => {
   console.log(mintLoading);
 
   async function uploadToDecentralizedStorage(data) {
+    try{
     const cid = await ipfs.add(data, {
       cidVersion: 1,
       hashAlg: "sha2-256",
     });
     return `https://ipfs.io/ipfs/${cid[0]?.path}`;
+  }
+  catch(error){
+    console.log(error)
+  }
   }
 
   const mintZNFT = async (
@@ -149,9 +154,11 @@ const Mint = () => {
     const JsonFormat = JSON.stringify(metadata);
 
     // const contentURI = await uploadToDecentralizedStorage(content);
+    try{
     const metadataURI = await uploadToDecentralizedStorage(
       Buffer.from(JsonFormat)
     );
+    
 
     const mintContent = content !== "" || undefined ? content : fileUrl;
 
@@ -203,6 +210,10 @@ const Mint = () => {
         }
       });
     });
+  }
+  catch(error){
+    console.log(error)
+  }
   };
 
   useEffect(() => {

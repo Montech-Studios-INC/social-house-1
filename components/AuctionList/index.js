@@ -23,6 +23,8 @@ import { formatEther } from "@ethersproject/units";
 import Link from "next/link";
 import { noImage } from "../../helpers/no-image";
 import ReactPlayer from 'react-player'
+import Countdown from 'react-countdown'
+import moment from "moment";
 
 const array = [1, 2, 3, 4, 5, 6, 7, 8];
 
@@ -147,8 +149,6 @@ export const AuctionsList = () => {
       console.log(list);
     }
   }, [tokenData, tokenData.fetching]);
-  console.log(list);
-  console.log(tokenData.tokens)
   const loadMore = () => {
     const newIndex = index + 8;
     const newShowMore = newIndex < tokenData.tokens.length - 1;
@@ -348,7 +348,7 @@ export const AuctionsList = () => {
                             <Row>
                               <Col>
                                 <span className='text-gray-500 text-sm'>
-                                  In 12d 8hrs 2s{" "}
+                                {moment.unix(token?.nft?.auctionData.expectedEndTimestamp).format('LL')}
                                 </span>
                               </Col>
                               <Col>
@@ -360,7 +360,7 @@ export const AuctionsList = () => {
                                 size='small'
                                 status='exception'
                                 showInfo={false}
-                                percent={20}
+                                percent={10}
                               />
                             </Col>
                           </>
@@ -369,7 +369,7 @@ export const AuctionsList = () => {
                             <button
                               className={`bg-black text-white font-bold rounded px-4 py-2 outline-none`}
                             >
-                              Place offer
+                             View
                             </button>
                           </Col>
                         )}

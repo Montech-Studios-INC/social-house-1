@@ -27,6 +27,7 @@ import { Player } from 'video-react';
 import ReactPlayer from "react-player";
 import moment from 'moment';
 import Timestamp from 'react-timestamp'
+
 const array = [1, 2, 3, 4, 5, 6, 7, 8];
 let tokenInfo;
 
@@ -42,6 +43,7 @@ const NFTdetails = ({label, value, link, isLink}) => (
   </Col>
 </Row>
 )
+
 
 export const useFetch = (data, dispatch, id, contract) => {
   useEffect(() => {
@@ -100,8 +102,8 @@ const Token = ({ id, contract }) => {
     setLoading(false);
   }, 3000);
 
-  const handle = useFullScreenHandle();
-  console.log(data)
+  console.log(moment.unix(1639369502).format('l'))
+  
   return (
     <>
       <div className='flex flex-col '>
@@ -111,7 +113,7 @@ const Token = ({ id, contract }) => {
           } p-10 flex flex-col items-center justify-around`}
         >
           {(tokenInfo?.metadata?.mimeType?.split("/")[0] === "image" ||
-            !tokenInfo?.metadata?.body && tokenInfo?.metadata?.mimeType?.split("/")[0] !== "audio") && (
+            (!tokenInfo?.metadata?.body && tokenInfo?.metadata?.mimeType?.split("/")[0] !== "audio" && tokenInfo?.metadata?.mimeType?.split("/")[0] !== "video")) && (
             <div className={`my-5 ${tokenData.fetching ? "" : ""}`}>
               {!tokenData.fetching ? (
                 <Image 
@@ -377,35 +379,56 @@ const Token = ({ id, contract }) => {
                       HIGHEST BID
                     </span>
                     <p className='font-bold text-2xl'>
-                      {data?.pricing?.reserve?.current.highestBid?.pricing
-                        .amount
-                        ? parseFloat(
-                            formatEther(
-                              data?.pricing?.reserve?.current.highestBid
-                                ?.pricing.amount
-                            )
-                          ).toFixed(3) +
-                          data?.pricing?.reserve?.current.highestBid?.pricing
-                            .currency.symbol
-                        : "N/A"}
+                    {data?.pricing?.reserve?.previousBids[0]?.pricing?.prettyAmount
+                         ? parseFloat(
+                               data?.pricing?.reserve?.previousBids[0]?.pricing.prettyAmount
+                           ).toFixed(3) +
+                           data?.pricing?.reserve?.previousBids[0]?.pricing?.currency
+                             .symbol
+                         : "Not sold yet"}
                     </p>
                   </div>
-                  <div className='mb-5'>
+                  {data?.pricing?.reserve?.expectedEndTimestamp && (
+                    <div className='mb-5'>
                     <p className='text-gray-400 text-xs mb-2 font-bold'>
                       AUCTION ENDS
                     </p>
                     <div className='flex flex-row'>
-                      <p className='font-bold text-base'>1h 5min 30 secs</p>
+                    {moment.unix(data?.pricing?.reserve?.expectedEndTimestamp).format('LL')}
                       <div className='inline-block ml-2 mt-1 shadow-md animate-ping bg-red-500 w-1 h-1 rounded-full '></div>
                     </div>
                   </div>
+                  )}
+                  
+                  <div className='mb-5'>
+                       <p className='text-gray-400 text-xs mb-2 font-bold'>
+                       <p className='text-gray-400 text-xs mb-2 font-bold'>
+                         Approved At
+                       </p>
+                       </p>
+                       <div className='flex flex-row'>
+                       {/* <Timestamp className='font-bold text-base' date={data.pricing.reserve.approvedTimestamp} />  */}
+                       {moment.unix(data?.pricing?.reserve?.approvedTimestamp).format('LL')}
+                       </div>
+                     </div>
+                     <div className='mb-5'>
+                       <p className='text-gray-400 text-xs mb-2 font-bold'>
+                       <p className='text-gray-400 text-xs mb-2 font-bold'>
+                         Reserve Price
+                       </p>
+                       </p>
+                       <div className='flex flex-row'>
+                       {/* <Timestamp className='font-bold text-base' date={data.pricing.reserve.approvedTimestamp} />  */}
+                       {data.pricing.reserve.reservePrice.prettyAmount}
+                       </div>
+                     </div>
                 </div>
               )}
 
               {data?.pricing?.reserve?.status === "Finished" && (
                 <div className='flex flex-col mb-5'>
                   <p className='text-gray-400 text-xs mb-2 font-bold'>
-                    SOLD AT
+                    SOLD
                   </p>
                   <span className='font-bold text-2xl'>
                     {data?.pricing?.perpetual?.highestBid?.pricing.amount
@@ -416,7 +439,7 @@ const Token = ({ id, contract }) => {
                         ).toFixed(3) +
                         data?.pricing?.perpetual?.highestBid?.pricing.currency
                           .symbol
-                      : "Not sold yet"}
+                      : "Sold"}
                   </span>
                 </div>
               )}
@@ -425,7 +448,7 @@ const Token = ({ id, contract }) => {
                 <p className='text-gray-400 text-xs font-bold mb-2'>MINTER</p>
                 <div className='flex items-center'>
                   <img
-                    src={profiles[1].profileImg}
+                    src={'/images/icon.png'}
                     className='w-7 h-7 rounded-full'
                   />
                   <p className='font-bold text-base ml-2'>
@@ -444,7 +467,7 @@ const Token = ({ id, contract }) => {
                 <p className='text-gray-400 text-xs mb-2 font-bold'>OWNER</p>
                 <div className='flex items-center'>
                   <img
-                    src={profiles[1].profileImg}
+                    src={'/images/icon.png'}
                     className='w-7 h-7 rounded-full'
                   />
                   <p className='font-bold text-base ml-2'>
@@ -460,7 +483,7 @@ const Token = ({ id, contract }) => {
                 </div>
               </div>
               <hr />
-              {data?.pricing?.reserve?.status === "Active" ? (
+              {data?.pricing?.reserve?.status === "Active" && (
                 <Link
                   href={`/token/${tokenInfo?.tokenContract}/${tokenInfo?.tokenId}/auction/bid`}
                 >
@@ -470,17 +493,15 @@ const Token = ({ id, contract }) => {
                     Place Bid
                   </button>
                 </Link>
-              ) : (
-                <Link
-                  href={`/token/${tokenInfo?.tokenContract}/${tokenInfo?.tokenId}/auction/offer`}
-                >
-                  <button
-                    className={`bg-black text-white font-bold rounded px-4 py-4 outline-none w-full mt-4`}
-                  >
-                    Place offer
-                  </button>
-                </Link>
               )}
+               {data?.pricing?.reserve?.status === "Pending" && (<div className='mb-5'>
+                       <p className='font-bold text-2xl'>
+                         Status
+                       </p>
+                       <div className='flex flex-row'>
+                       <span className='text-gray-400 text-xs mb-2 font-bold'>{data?.pricing?.reserve?.status}</span>
+                       </div>
+                     </div>)}
             </div>
           </div>
         </div>

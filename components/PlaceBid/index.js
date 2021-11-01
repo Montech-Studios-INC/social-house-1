@@ -33,6 +33,7 @@ import { AuctionHouse, Decimal } from "@zoralabs/zdk";
 import { Button, notification, Space } from "antd";
 import { formatUnits } from "@zoralabs/core/node_modules/@ethersproject/units";
 import { Divider } from "antd";
+import Countdown from 'react-countdown'
 
 let tokenInfo;
 
@@ -129,11 +130,13 @@ const PlaceBid = ({ id, contract }) => {
               'Successfully placed a bid!',
           });
           setLoading(false)
+          router.push(`token/${contract}/${id}`)
           }).catch(error => {
+            console.log(error)
             notification['error']({
               message: 'Error placing bid!',
               description:
-                'execution reverted: Auction expired',
+                error.message.substring(115, 160),
             });
             setLoading(false)
           });
@@ -207,7 +210,7 @@ const PlaceBid = ({ id, contract }) => {
         )
       : 0;
     newBid = (highestBid * 5) / 100 + highestBid;
-    setPreviousBid(newBid);
+    setPreviousBid(newBid <= 0 ? parseInt(data?.pricing?.reserve?.reservePrice.prettyAmount) : newBid);
   }, [tokenData, data]);
   useEffect(() => {
     setAmount(newBid);
@@ -223,12 +226,7 @@ const PlaceBid = ({ id, contract }) => {
     const auction = await auctionHouse.fetchAuction(auctionId);
   };
 
-  // getAuction(tokenData?.token[0]?.nft?.auctionData?.id);
-
-  // if (tokenData.fetching === false) {
-  //     setPreviousBid(parseFloat(formatEther(data?.pricing?.reserve?.current.highestBid?.pricing.amount)).toFixed(3))
-  //     console.log(previousBidAmount)
-  // }
+  console.log(data?.pricing?.reserve)
 
   return (
     <>
@@ -344,7 +342,7 @@ const PlaceBid = ({ id, contract }) => {
                         <Row>
                           <Col>
                             <span className='text-gray-500 text-sm'>
-                              In 12d 8hrs 2s{" "}
+                            {moment.unix(data?.pricing?.reserve?.expectedEndTimestamp).format('LL')}
                             </span>
                           </Col>
                           <Col>
@@ -408,7 +406,7 @@ const PlaceBid = ({ id, contract }) => {
                   }}
                 />
               </div>
-              <p>Your bid must be atleast ${previousBidAmount}</p>
+              <p>Your bid must be atleast  {previousBidAmount} ETH</p>
               <p>The next bid must be atleast 5% of the current bid </p>
               <button
                 className={`bg-black text-white font-bold rounded px-4 py-4 outline-none w-full mt-6 ${
