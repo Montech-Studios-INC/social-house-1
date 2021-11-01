@@ -20,6 +20,7 @@
     "@metamask/detect-provider": "^1.2.0",
     "@metamask/jazzicon": "^2.0.0",
     "@tailwindcss/forms": "^0.3.4",
+    "@tanem/react-nprogress": "^3.0.81",
     "@usedapp/core": "^0.5.4",
     "@zoralabs/manage-auction-hooks": "^0.0.10",
     "@zoralabs/nft-components": "^0.1.11",
