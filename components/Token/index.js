@@ -15,7 +15,7 @@ import {
   MediaFetchAgent,
   NetworkIDs,
 } from "@zoralabs/nft-hooks";
-import { Image, Row, Col, Modal } from "antd";
+import { Image, Row, Col, Modal, Tooltip } from "antd";
 import { useNFT } from "@zoralabs/nft-hooks";
 import { formatEther } from "@ethersproject/units";
 import Link from "next/link";
@@ -27,22 +27,30 @@ import { Player } from 'video-react';
 import ReactPlayer from "react-player";
 import moment from 'moment';
 import Timestamp from 'react-timestamp'
+import {CopyToClipboard} from 'react-copy-to-clipboard';
 
 const array = [1, 2, 3, 4, 5, 6, 7, 8];
 let tokenInfo;
 
-const NFTdetails = ({label, value, link, isLink}) => (
+const NFTdetails = ({label, value, link, isLink}) => {
+  const [toolTip, setToolTip] = useState('Copy')
+  return(
   <Row className='mb-4'>
   <Col span={12} className='font-bold text-base'>
     {label}
   </Col>
   <Col span={12} className='text-right text-base'>
-    <span className='mr-5'>{value?.length >= 20 ? `${value?.slice(0,15)}...${value?.slice(value?.length - 4,value?.length)}` : value}</span>
+    <span className='mr-5'>{value?.length >= 20 ? `${value?.slice(0,10)}...${value?.slice(value?.length - 4,value?.length)}` : value}</span>
     {isLink ? <a href={link} target="_blank"><i className='fas fa-external-link-alt text-gray-600' /></a> : ''}
-    <i className='fas fa-copy text-gray-600 mx-2' />
+    <CopyToClipboard text={value}
+      onCopy={() => setToolTip('copied')}>
+      <Tooltip placement="top" title={toolTip}>
+      <i className='fas fa-copy text-gray-600 mx-2 cursor-pointer' />
+      </Tooltip>
+    </CopyToClipboard>
   </Col>
-</Row>
-)
+</Row>)
+}
 
 
 export const useFetch = (data, dispatch, id, contract) => {
