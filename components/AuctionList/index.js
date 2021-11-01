@@ -202,8 +202,8 @@ export const AuctionsList = () => {
                 key={`${tokenInfo.tokenId}`}
                 className=' bg-white mb-5 rounded-lg  border-2 border-gray-100 shadow-md hover:shadow-xd cursor-pointer w-full sm:w-full md:w-11/12'
               >
-                {(tokenInfo.metadata?.mimeType?.split("/")[0] === "image" ||
-                  !tokenInfo?.metadata?.body) && (
+                {(tokenInfo?.metadata?.mimeType?.split("/")[0] === "image" ||
+            (!tokenInfo?.metadata?.body && tokenInfo?.metadata?.mimeType?.split("/")[0] !== "audio" && tokenInfo?.metadata?.mimeType?.split("/")[0] !== "video"))  && (
                   <Image
                     align='center'
                     preview={false}
@@ -276,9 +276,8 @@ export const AuctionsList = () => {
                               <i class="fas fa-volume-up"></i>
                             </div>
                           )}
-                        {(tokenInfo.metadata?.mimeType?.split("/")[0] ===
-                          "image" ||
-                          !tokenInfo.metadata?.body) && (
+                      {(tokenInfo?.metadata?.mimeType?.split("/")[0] === "image" ||
+            (!tokenInfo?.metadata?.body && tokenInfo?.metadata?.mimeType?.split("/")[0] !== "audio" && tokenInfo?.metadata?.mimeType?.split("/")[0] !== "video"))  && (
                           <div className='flex items-center justify-center bg-black rounded-full p-2 text-white font-bold w-min'>
                             <i class='fas fa-image'></i>
                           </div>

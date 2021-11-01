@@ -130,7 +130,7 @@ const PlaceBid = ({ id, contract }) => {
               'Successfully placed a bid!',
           });
           setLoading(false)
-          router.push(`token/${contract}/${id}`)
+          router.push(`/token/${contract}/${id}`)
           }).catch(error => {
             console.log(error)
             notification['error']({

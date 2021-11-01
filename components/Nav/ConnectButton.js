@@ -47,6 +47,7 @@ export default function ConnectButton({ handleOpenModal }) {
   } = useContext(GlobalContext);
 
   const handleConnectWallet = async () => {
+    if(parseInt(chainId) === parseInt(process.env.NEXT_PUBLIC_NETWORK_ID))
     activateBrowserWallet();
   };
 
