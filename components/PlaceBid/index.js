@@ -2,9 +2,10 @@ import React, {
   useState,
   useEffect,
   useRef,
-  useCallback,
+  useContext,
   useReducer,
 } from "react";
+import { GlobalContext } from '../../contexts/provider';
 import { NFTPreview } from "@zoralabs/nft-components";
 import { useRouter } from "next/router";
 import Wrapper from "../Wrapper/index";
@@ -15,34 +16,40 @@ import {
   MediaFetchAgent,
   NetworkIDs,
 } from "@zoralabs/nft-hooks";
-import { Image, Row, Col, Modal } from "antd";
-import { useNFT } from "@zoralabs/nft-hooks";
-import { formatEther } from "@ethersproject/units";
-import Link from "next/link";
-import { noImage } from "../../helpers/no-image";
+import { useNFT } from '@zoralabs/nft-hooks'
+import { formatEther, parseEther } from "@ethersproject/units";
+import Link from 'next/link'
+import {noImage} from '../../helpers/no-image';
 import { FullScreen, useFullScreenHandle } from "react-full-screen";
-import ReactAudioPlayer from "react-audio-player";
+import ReactAudioPlayer from 'react-audio-player';
 import moment from "moment";
-import { profiles, highestBid, nftHistory, nftDetails } from "../Nav/dummyData";
-import { Player } from 'video-react';
-import ReactPlayer from "react-player";
+import { Row, Col, Progress, Image } from "antd";
+import { useWeb3Context } from 'web3-react'
+import { useEthers, useEtherBalance } from "@usedapp/core";
+import * as actions from '../../contexts/actions';
+import { Zora } from '@zoralabs/zdk'
+import { Wallet, ethers, BigNumberish, BigNumber } from 'ethers'
+import { AuctionHouse, Decimal } from '@zoralabs/zdk'
+import { Button, notification, Space } from 'antd';
+import { formatUnits } from "@zoralabs/core/node_modules/@ethersproject/units";
 
-const array = [1, 2, 3, 4, 5, 6, 7, 8];
+
 let tokenInfo;
 
 export const useFetch = (data, dispatch, id, contract) => {
   useEffect(() => {
     dispatch({ type: "FETCHING_TOKEN", fetching: true });
 
-    const fetchAgent = new MediaFetchAgent(process.env.NEXT_PUBLIC_NETWORK_ID);
-    const token = FetchStaticData.fetchZoraIndexerItem(fetchAgent, {
-      tokenId: id,
-      collectionAddress: contract,
-    })
-      .then((token) => {
-        tokenInfo = FetchStaticData.getIndexerServerTokenInfo(token);
-        dispatch({ type: "STACK_TOKEN", token });
-        dispatch({ type: "FETCHING_TOKEN", fetching: false });
+const fetchAgent = new MediaFetchAgent(
+  process.env.NEXT_PUBLIC_NETWORK_ID
+);
+ FetchStaticData.fetchZoraIndexerItem(fetchAgent, {
+  tokenId: id,
+  collectionAddress: contract,
+}).then((token) => {
+      tokenInfo = FetchStaticData.getIndexerServerTokenInfo(token);
+      dispatch({ type: "STACK_TOKEN", token });
+      dispatch({ type: "FETCHING_TOKEN", fetching: false });
       })
       .catch((err) => {
         console.log(err);
@@ -50,9 +57,100 @@ export const useFetch = (data, dispatch, id, contract) => {
   }, [dispatch, data.page]);
 };
 
-const Token = ({ id, contract }) => {
-  const [loading, setLoading] = useState(true);
+
+const PlaceBid = ({id, contract}) => {
+  const { activateBrowserWallet, account, chainId, error, deactivate, activate, active, library } = useEthers();
+  const etherBalance = useEtherBalance(account);
+  const [isloggedin, setIsloggedin] = useState(false)
   const router = useRouter();
+  const [amount, setAmount] = useState('')
+  const [previousBidAmount, setPreviousBid] = useState(0)
+  const [bidPlaced, setBidPlaced] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const rpcURL = process.env.NEXT_PUBLIC_RPC_URL;
+  const [signer, setSigner] = useState({})
+
+  useEffect( async () => {
+    if (typeof window.ethereum !== 'undefined' || (typeof window.web3 !== 'undefined')) {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        setSigner(provider.getSigner());
+        // other stuff using provider here
+    }
+  }, []);
+
+
+  // const provider = new ethers.providers.JsonRpcProvider(rpcURL);
+  // let wallet = new Wallet(account)
+  // wallet = wallet.connect(library)
+
+   // let privateKey = "0df9a9aad13c712ff0b372e754a6d84b23b64ad60769d463ac4d3ab449cc8e07";
+  // let wallet = new ethers.Wallet(account);
+
+  // Connect a wallet to mainnet
+  // let provider = ethers.getDefaultProvider();
+  // let walletWithProvider = new ethers.Wallet(privateKey, provider);
+  
+  // const provider = new ethers.providers.Web3Provider(typeof window !== "undefined" ? window.ethereum : '')
+  
+  const handlePlaceBid = async (e, auctionId, amount, setLoading) => {
+
+    const zora = new Zora(signer, parseInt(process.env.NEXT_PUBLIC_NETWORK_ID)) 
+
+    const auctionHouse = new AuctionHouse(signer, parseInt(process.env.NEXT_PUBLIC_NETWORK_ID));
+
+    e.preventDefault();
+    setLoading(true);
+    if(amount >= previousBidAmount){
+      if(parseFloat(formatUnits(etherBalance)).toFixed(3) < previousBidAmount){
+        notification['error']({
+          message: 'Error Placing Bid!',
+          description:
+            'Not enough funds to perform action!',
+        });
+        setLoading(false)
+      }
+      else{
+        try{
+        const auction = await auctionHouse.createBid(auctionId, parseEther(amount.toString()));
+        setBidPlaced(true);
+        notification['success']({
+          message: 'Bid Placed',
+          description:
+            'Successfully placed a bid!',
+        });
+        setLoading(false)
+      }
+      catch (error) {
+        notification['error']({
+          message: 'Error placing bid!',
+          description:
+            error.message,
+        });
+        setLoading(false)
+      }
+      }
+    }
+    else{
+      notification['error']({
+        message: 'Error Placing Bid!',
+        description:
+          'The new bid must be 5% more than the current bid!',
+      });
+      setLoading(false)
+    }
+
+  }
+
+
+  useEffect(()=>{
+      if(account !== null && account !== undefined){
+          setIsloggedin(true)
+      }
+      else{
+          setIsloggedin(false)
+      }
+  }, [account, chainId, active])
+
   const imgReducer = (state, action) => {
     switch (action.type) {
       case "STACK_TOKEN":
@@ -63,6 +161,16 @@ const Token = ({ id, contract }) => {
         return state;
     }
   };
+  const {
+      showModalState: {
+       showModal,
+     },
+     setShowModal,
+   } = useContext(GlobalContext);
+  const openModal = () => {
+      // setIsModalVisible(true);
+      actions.changeAuthModal(!showModal)(setShowModal);
+    };
 
   const pageReducer = (state, action) => {
     switch (action.type) {
@@ -73,422 +181,200 @@ const Token = ({ id, contract }) => {
     }
   };
 
+
   const [tokenData, imgDispatch] = useReducer(imgReducer, {
-    token: [],
+      token: [],
     fetching: true,
   });
   const [pager, pagerDispatch] = useReducer(pageReducer, { page: 0 });
   useFetch(pager, imgDispatch, id, contract);
 
-  const { data, error } = useNFT(contract, id);
-  const { metadata } = useNFTMetadata(data && data.metadataURI);
+  const { data } = useNFT(contract, id)
+  const {metadata} = useNFTMetadata(data && data.metadataURI);
+  let newBid;
+  useEffect(()=>{
+    const highestBid = data?.pricing?.reserve?.current.highestBid?.pricing.amount ? parseFloat(parseFloat(formatEther(data?.pricing?.reserve?.current.highestBid?.pricing.amount)).toFixed(3)) : 0;
+     newBid = (highestBid * 5) / 100 + highestBid;
+    setPreviousBid(newBid)
+  }, [tokenData, data])
+  useEffect(()=>{
+    setAmount(newBid)
+  }, [newBid, previousBidAmount])
 
-  setTimeout(() => {
-    setLoading(false);
-  }, 3000);
+  const getAuction = async (auctionId) => {
+    const zora = new Zora(signer, parseInt(process.env.NEXT_PUBLIC_NETWORK_ID)) 
 
-  const handle = useFullScreenHandle();
-  console.log('tokenInfo', tokenInfo);
-  console.log(contract, id)
+    const auctionHouse = new AuctionHouse(signer, parseInt(process.env.NEXT_PUBLIC_NETWORK_ID));
+    const auction = await auctionHouse.fetchAuction(auctionId)
+  }
+
+  // getAuction(tokenData?.token[0]?.nft?.auctionData?.id);
+
+
+  // if (tokenData.fetching === false) {
+  //     setPreviousBid(parseFloat(formatEther(data?.pricing?.reserve?.current.highestBid?.pricing.amount)).toFixed(3))
+  //     console.log(previousBidAmount)
+  // }
+
   return (
-    <>
-      <div className='flex flex-col '>
-        <div
-          className={`my-12 bg-gray-200 w-full ${
-            tokenData.fetching ? "h-96" : "h-auto"
-          } p-10 flex flex-col items-center justify-around`}
-        >
-          {(tokenInfo?.metadata?.mimeType?.split("/")[0] === "image" ||
-            !tokenInfo?.metadata?.body && tokenInfo?.metadata?.mimeType?.split("/")[0] !== "audio") && (
-            <div className={`my-5 ${tokenData.fetching ? "" : ""}`}>
-              {!tokenData.fetching ? (
-                <Image
-                  width='100%'
-                  src={tokenInfo?.image}
-                  fallback={noImage}
-                  preview={false}
-                />
-              ) : (
-                <img
-                  className='text-white w-10 h-10 animate-spin mx-4 text-center z-20'
-                  src='/images/spinner-of-dots.png'
-                />
-              )}
-              {/* <div className='w-full my-4'>
-                <div className='bg-white rounded-full w-12 h-12 m-auto flex justify-center items-center cursor-pointer'>
-                  <i class='fas fa-expand text-lg'></i>
-                </div>
-              </div> */}
-            </div>
-          )}
-          {(tokenInfo?.metadata?.mimeType?.split("/")[0] === "audio" ||
-            tokenInfo?.metadata?.body?.mimeType?.split("/")[0] === "audio") && (
-              <div
-                className={`my-5 flex flex-row justify-between ${
-                  tokenData.fetching ? "" : ""
-                }`}
+      <>
+     <div className="flex flex-row bg-gray-500 mt-20 justify-between">
+         <div className="bg-gray-300 px-10 py-4 w-1/2">
+         <Row justify="center" >
+          <div className={`bg-gray-300 mt-10 flex flex-col items-center justify-around`}>
+              <Col
+                sm={24}
+                md={24}
+                lg={24}
+                key={`${tokenInfo?.tokenId}/${new Date().getTime() / 1000}`}
+                className=" bg-white mx-4 h-9/12 mb-5 tags rounded-lg  border-2 border-gray-100 w-full  shadow-md hover:shadow-xd cursor-pointer"
               >
-                {!tokenData.fetching ? (
-                  <div className='flex flex-col md:flex-row items-center'>
-                    <img
-                      className='rounded-t-lg w-80 h-80 mb-4 md:mr-4'
-                      src={tokenInfo.metadata?.body?.artwork?.info?.uri || tokenInfo?.image}
-                      fallback={noImage}
-                    />
-                    <ReactAudioPlayer src={data?.zoraNFT.contentURI || tokenInfo?.image} controls />
-                  </div>
-                ) : (
-                  <img
-                    className='text-white w-10 h-10 animate-spin mx-4 text-center z-20'
-                    src='/images/spinner-of-dots.png'
-                  />
-                )}
-              </div>
-            )}
-
-          {(tokenInfo?.metadata?.mimeType?.split("/")[0] === "video" ||
-            tokenInfo?.metadata?.body?.mimeType?.split("/")[0] === "video") && (
-              <div
-                className={`my-5 flex flex-row justify-between ${
-                  tokenData.fetching ? "" : ""
-                }`}
-              >
-                {!tokenData.fetching ? (
-                  <div className='flex flex-col md:flex-row items-center'>
-                    {tokenInfo?.metadata?.image_url !== '' && (
-                      <img
-                      className='rounded-t-lg w-80 h-80 mb-4 md:mr-4'
-                      src={tokenInfo?.metadata?.image_url || tokenInfo.metadata?.body?.artwork?.info?.uri}
-                      fallback={noImage}
-                    />
-                    )}
-                    
-                    <ReactPlayer
-                    url={data?.zoraNFT.contentURI || tokenInfo?.image}
-                    playing loop
-                  />
-                  </div>
-                ) : (
-                  <img
-                    className='text-white w-10 h-10 animate-spin mx-4 text-center z-20'
-                    src='/images/spinner-of-dots.png'
-                  />
-                )}
-              </div>
-            )}
-          {!tokenInfo?.metadata?.body && tokenInfo?.metadata?.image && (
-            <div
-              className={`my-5 flex flex-row justify-between ${
-                tokenData.fetching ? "" : ""
-              }`}
-            >
-              {!tokenData.fetching ? (
-                <>
+                {(tokenInfo?.metadata?.mimeType?.split("/")[0] === "image" ||
+                  !tokenInfo?.metadata?.body) && (
                   <Image
-                    align='center'
-                    preview={false}
-                    height={600}
-                    className=' object-cover  rounded-t-lg w-full'
-                    src={tokenInfo?.metadata?.image}
-                    fallback={noImage}
-                  />
-                </>
-              ) : (
-                <img
-                  className='text-white w-10 h-10 animate-spin mx-4 text-center z-20'
-                  src='/images/spinner-of-dots.png'
-                />
-              )}
-            </div>
-          )}
-        </div>
-        <div className='flex flex-col-reverse lg:flex-row py-5 w-12/13 xl:w-2/3 m-auto'>
-          <div className='flex flex-col w-full xl:w-1/2 lg:mr-2'>
-            {/* bid details */}
-            {data?.zoraNFT && (
-              <div className='bg-gray-100 w-max flex justify-center items-center rounded-full p-3 cursor-pointer mt-3'>
-                {/* collection */}
-                <img src='/fpo/favicon.png' className='w-7 h-7 rounded-full' />
-                <span className='ml-2 font-bold'>ZORA</span>
-              </div>
-            )}
-
-            <div className='flex flex-col'>
-              {tokenInfo?.metadata?.name && (
-                <div className='my-5'>
-                  <p className='text-4xl font-bold w-11/12'>
-                    {tokenInfo?.metadata?.name}
-                  </p>
-                </div>
-              )}
-              {tokenInfo?.metadata?.body && (
-                <div className='my-5'>
-                  <p className='text-4xl font-bold w-11/12'>
-                    {tokenInfo?.metadata?.body?.title}
-                  </p>
-                </div>
-              )}
-              {tokenData.fetching && (
-                <div className='my-5'>
-                  <div className='bg-gray-200 w-32 animate-pulse h-6 rounded-md'></div>
-                </div>
-              )}
-              {tokenInfo?.metadata?.description && (
-                <div className='my-5'>
-                  <p className='text-sm font-light w-11/12'>
-                    {tokenInfo?.metadata?.description}
-                  </p>
-                </div>
-              )}
-              {tokenData.fetching && (
-                <div className='my-5'>
-                 <div className='bg-gray-200 w-11/12 animate-pulse h-6 my-2 rounded-md'></div>
-                 <div className='bg-gray-200 w-11/12 animate-pulse h-6 my-2 rounded-md'></div>
-                 <div className='bg-gray-200 w-11/12 animate-pulse h-6 my-2 rounded-md'></div>
-                </div>
-              )}
-            </div>
-            <div className='flex flex-row my-6'>
-              <div className='flex flex-col flex-1'>
-                <p className='font-bold text-gray-500 mb-2 text-xs'>MINTER</p>
-                <div className='flex items-center'>
-                  <img
-                    src={profiles[0].profileImg}
-                    className='w-7 h-7 rounded-full'
-                  />
-                  <p className='font-bold ml-2'>
-                    {data?.nft?.creator &&
-                      `${data?.nft?.creator.slice(
-                        0,
-                        15
-                      )}...${data?.nft?.creator.slice(
-                        data?.nft?.creator.length - 4,
-                        data?.nft?.creator.length
-                      )}`}
-                  </p>
-                </div>
-              </div>
-              <div className='flex flex-col flex-1'>
-                <p className='font-bold text-gray-500 mb-2 text-xs'>OWNER</p>
-                <div className='flex items-center'>
-                  <img
-                    src={profiles[1].profileImg}
-                    className='w-7 h-7 rounded-full'
-                  />
-                  <p className='font-bold ml-2'>
-                    {data?.nft?.owner &&
-                      `${data?.nft?.owner.slice(
-                        0,
-                        15
-                      )}...${data?.nft?.owner.slice(
-                        data?.nft?.owner.length - 4,
-                        data?.nft?.owner.length
-                      )}`}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div
-              className='tags p-4 my-5 w-12/13 rounded-lg'
-              style={{ border: "2px solid #EBEBEB" }}
-            >
-              <div className='flex flex-row justify-between'>
-                <span className='font-bold text-xs mb-3 text-gray-500'>
-                  HISTORY
-                </span>
-              </div>
-              <div className='flex flex-col'>
-                {nftHistory.map((bid, index) => {
-                  return (
-                    <div key={index} className='mb-4'>
-                      <Row align='middle'>
-                        <Col span={1}>
-                          <img
-                            src={profiles[0].profileImg}
-                            className='w-9 h-7 rounded-full'
-                            alt='big_img'
-                          />
-                        </Col>
-                        <Col span={20} className='pl-3 font-bold'>
-                          {bid.bidderId}
-                          <span className='pl-2 text-gray-500 font-normal'>
-                            {bid.status}
+                      
+                      align="center"
+                      preview={true}
+                      height={300}
+                      className="h-72 w-full object-cover card-img-top rounded-t-lg"
+                      src={tokenInfo?.image}
+                      fallback={noImage}
+                    />
+                )}
+                {tokenInfo?.metadata.body &&
+                  tokenInfo.metadata?.body?.mimeType.split("/")[0] ===
+                    "audio" && (
+                      <Image
+                      height={300}
+                      preview={true}
+                      className="h-72 w-full object-cover card-img-top rounded-t-lg"
+                      src={tokenInfo.metadata.body.artwork.info.uri}
+                      fallback={noImage}                      />
+                  )}
+                  {!tokenInfo?.metadata?.body && tokenInfo?.metadata?.image && (
+                      <Image
+                      height={300}
+                      preview={true}
+                      className="h-72 w-full object-cover card-img-top rounded-t-lg"
+                      src={tokenInfo?.metadata?.image}
+                      fallback={noImage}                      />
+                  )}
+              <Link href={`/token/${tokenInfo?.tokenContract}/${tokenInfo?.tokenId}`}>
+                <div className="p-4 border border-gray-300 rounded-md tags">
+                  <Row align="middle" className="mb-2">
+                    <Col span={12} className="font-bold text-sm">
+                      {tokenInfo?.metadata?.name && tokenInfo?.metadata?.name}
+                      {tokenInfo?.metadata?.body && tokenInfo?.metadata?.body?.title}
+                    </Col>
+                    <Col span={12} align="right">
+                      {tokenInfo?.metadata?.body &&
+                        tokenInfo?.metadata?.body?.mimeType?.split("/")[0] ===
+                          "audio" && (
+                          <div className="flex items-center justify-center bg-black rounded-full p-2 text-white font-bold w-min">
+                            <i class="fas fa-volume-up"></i>
+                          </div>
+                        )}
+                      {(tokenInfo?.metadata?.mimeType?.split("/")[0] ===
+                        "image" ||
+                        !tokenInfo?.metadata?.body) && (
+                        <div className="flex items-center justify-center bg-black rounded-full p-2 text-white font-bold w-min">
+                          <i class="fas fa-image"></i>
+                        </div>
+                      )}
+                      {(!tokenInfo?.metadata?.body && tokenInfo?.metadata?.image && (
+                        <div className="flex items-center justify-center bg-black rounded-full p-2 text-white font-bold w-min">
+                          <i class="fas fa-video"></i>
+                        </div>
+                      ))}
+                      
+                    </Col>
+                  </Row>
+                  <Row className="w-full mb-5" align="middle">
+                    <Col>
+                      <img
+                        src="/fpo/favicon.png"
+                        className="w-5 h-5 rounded-full"
+                      />
+                    </Col>
+                    <Col className="ml-2">Zora</Col>
+                  </Row>
+                  <Row
+                    className="border-t-2 py-2 border-gray-200"
+                    align="middle"
+                  >
+                  {data?.pricing?.reserve?.status === "Active" &&(
+                  <Col span={12}>
+                      <span className="block text-gray-500 text-md">Current Bid</span>
+                      <span className="font-bold text-md">
+                      {data?.pricing?.reserve?.current.highestBid?.pricing.amount ? parseFloat(formatEther(data?.pricing?.reserve?.current.highestBid?.pricing.amount)).toFixed(3) + data?.pricing?.reserve?.current.highestBid?.pricing.currency.symbol : "N/A"}
+                      </span>
+                    </Col>
+                  )}
+                        <>
+                        <Col span={12} className="transition-all duration-300">
+                      <Row>
+                        <Col>
+                          <span className="text-gray-500 text-sm">
+                          In 12d 8hrs 2s{" "}
                           </span>
-                          <div className='text-gray-500 text-xs font-normal mt-2'>
-                            {bid.timeStamp}{" "}
-                            <img
-                              src={bid.etherium}
-                              className='w-3 h-3 rounded-full inline'
-                              alt='etherium_link'
-                            />
-                          </div>
                         </Col>
-                        <Col span={3} className='font-bold text-right'>
-                          {bid.amountEth}
-                          <div
-                            span={4}
-                            className='text-gray-500 text-xs font-normal mt-2'
-                          >
-                            {bid.amountUSD}
-                          </div>
+                        <Col>
+                          <div className="inline-block ml-2 shadow-md animate-ping bg-red-500 w-1 h-1 rounded-full "></div>
                         </Col>
                       </Row>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-            <div
-              className='tags p-4 my-5 w-12/13 rounded-lg'
-              style={{ border: "2px solid #EBEBEB" }}
-            >
-              <div className='flex flex-row justify-between'>
-                <span className='font-bold text-xs mb-3 text-gray-500'>
-                  NFT DETAILS
-                </span>
-              </div>
-              <div className='flex flex-col'>
-                {nftDetails.map((dt, index) => {
-                  return (
-                    <Row className='mb-4' key={index}>
-                      <Col span={12} className='font-bold text-base'>
-                        {dt.label}
-                      </Col>
-                      <Col span={12} className='text-right text-base'>
-                        <span className='mr-5'>{dt.value}</span>
-                        <i className='fas fa-external-link-alt text-gray-600 ' />{" "}
-                        <i className='fas fa-copy text-gray-600' />
-                      </Col>
-                    </Row>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-          <div className='w-full xl:w-4/12'>
-            {/* auction details */}
-            <div
-              className='static md:sticky md:top-28 rounded-lg p-4'
-              style={{ border: "2px solid #EBEBEB" }}
-            >
-              {data?.pricing?.reserve?.status === "Active" && (
-                <div>
-                  <div className='flex flex-col mb-5'>
-                    <span className='text-gray-400 text-xs mb-2 font-bold'>
-                      HIGHEST BID
-                    </span>
-                    <p className='font-bold text-2xl'>
-                      {data?.pricing?.reserve?.current.highestBid?.pricing
-                        .amount
-                        ? parseFloat(
-                            formatEther(
-                              data?.pricing?.reserve?.current.highestBid
-                                ?.pricing.amount
-                            )
-                          ).toFixed(3) +
-                          data?.pricing?.reserve?.current.highestBid?.pricing
-                            .currency.symbol
-                        : "N/A"}
-                    </p>
-                  </div>
-                  <div className='mb-5'>
-                    <p className='text-gray-400 text-xs mb-2 font-bold'>
-                      AUCTION ENDS
-                    </p>
-                    <div className='flex flex-row'>
-                      <p className='font-bold text-base'>1h 5min 30 secs</p>
-                      <div className='inline-block ml-2 mt-1 shadow-md animate-ping bg-red-500 w-1 h-1 rounded-full '></div>
-                    </div>
-                  </div>
-                </div>
-              )}
 
-              {data?.pricing?.reserve?.status === "Finished" && (
-                <div className='flex flex-col mb-5'>
-                  <p className='text-gray-400 text-xs mb-2 font-bold'>
-                    SOLD AT
-                  </p>
-                  <span className='font-bold text-2xl'>
-                    {data?.pricing?.perpetual?.highestBid?.pricing.amount
-                      ? parseFloat(
-                          formatEther(
-                            data?.pricing?.perpetual?.highestBid?.pricing.amount
-                          )
-                        ).toFixed(3) +
-                        data?.pricing?.perpetual?.highestBid?.pricing.currency
-                          .symbol
-                      : "N/A"}
-                  </span>
+                      <Progress
+                        size="small"
+                        status="exception"
+                        showInfo={false}
+                        percent={20}
+                      />
+                    </Col>
+                    </>
+                  </Row>
                 </div>
-              )}
-
-              <div className='flex flex-col mb-5'>
-                <p className='text-gray-400 text-xs font-bold mb-2'>MINTER</p>
-                <div className='flex items-center'>
-                  <img
-                    src={profiles[1].profileImg}
-                    className='w-7 h-7 rounded-full'
-                  />
-                  <p className='font-bold text-base ml-2'>
-                    {data?.nft?.creator &&
-                      `${data?.nft?.creator.slice(
-                        0,
-                        6
-                      )}...${data?.nft?.creator.slice(
-                        data?.nft?.creator.length - 4,
-                        data?.nft?.creator.length
-                      )}`}
-                  </p>
-                </div>
-              </div>
-              <div className='flex flex-col mb-5'>
-                <p className='text-gray-400 text-xs mb-2 font-bold'>OWNER</p>
-                <div className='flex items-center'>
-                  <img
-                    src={profiles[1].profileImg}
-                    className='w-7 h-7 rounded-full'
-                  />
-                  <p className='font-bold text-base ml-2'>
-                    {data?.nft?.owner &&
-                      `${data?.nft?.owner.slice(
-                        0,
-                        6
-                      )}...${data?.nft?.owner.slice(
-                        data?.nft?.owner.length - 4,
-                        data?.nft?.owner.length
-                      )}`}
-                  </p>
-                </div>
-              </div>
-              <hr />
-              {data?.pricing?.reserve?.status === "Active" ? (
-                <Link
-                  href={`/token/${tokenInfo?.tokenContract}/${tokenInfo?.tokenId}/auction/bid`}
-                >
-                  <button
-                    className={`bg-black text-white font-bold rounded px-4 py-4 outline-none w-full mt-4`}
-                  >
-                    Place Bid
-                  </button>
                 </Link>
-              ) : (
-                <Link
-                  href={`/token/${tokenInfo?.tokenContract}/${tokenInfo?.tokenId}/auction/offer`}
-                >
-                  <button
-                    className={`bg-black text-white font-bold rounded px-4 py-4 outline-none w-full mt-4`}
-                  >
-                    Place offer
-                  </button>
-                </Link>
-              )}
-            </div>
+              </Col>
           </div>
-        </div>
-      </div>
-    </>
+          </Row>
+         </div>
+         <div className="bg-white px-10 py-4 w-1/2">
+                    {!isloggedin && (
+                        <div className="mt-20 flex flex-col justify-around items-center">
+                            <p className="text-4xl font-bold text-center my-4 w-1/2">Connect your wallet to place a bid</p>
+                            <button onClick={openModal} className={`bg-black text-white font-bold rounded px-4 py-2 outline-none w-full mt-2`}>Connect wallet</button>
+                            <p className="text-gray-600 my-4 cursor-pointer">How to get a wallet!</p>
+                        </div>
+
+                    )}
+                    {isloggedin && (
+                        <div className="mt-20 flex flex-col justify-around items-center">
+                            <div className="flex flex-row justify-between">
+                                <p className="text-xl">Place a bid</p>
+                                <p className="mx-4 mt-1">Your balance:  {etherBalance && parseFloat(formatEther(etherBalance)).toFixed(3)} ETH</p>
+                            </div>
+                            <div className="my-3">
+                            <input className={`"bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none ${amount >= previousBidAmount ? 'focus:border-purple-500' : 'focus:border-red-400'} focus:bg-white "`} id="inline-full-name" type="number" value={amount} onChange={(e)=>{setAmount(e.target.value)}} />
+                            </div>
+                            <p>Your bid must be atleast ${previousBidAmount}</p>
+                            <p>The next bid must be atleast 5% of the current bid </p>
+                            <button className={`bg-black text-white font-bold rounded px-4 py-2 outline-none w-full mt-2 ${amount < previousBidAmount ? 'bg-gray-600 cursor-not-allowed' : ''}`} onClick={(e)=>{amount >= previousBidAmount && handlePlaceBid(e, tokenData?.token[0]?.nft?.auctionData?.id, amount, setLoading)}}>{!loading ? (
+                            "Place a bid"
+                          ) : (
+                            <Row justify='center'>
+                              <img
+                                className='text-white w-5 h-5 animate-spin mx-4 text-center'
+                                src='/images/spinner.png'
+                              />
+                            </Row>
+                          )}</button>
+                            <p>You cannot withdraw a bid once submitted</p>
+                        </div>
+                    )}
+         </div>
+     </div>
+      </>
   );
 };
 
-export default Token;
+export default PlaceBid;

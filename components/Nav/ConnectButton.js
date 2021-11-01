@@ -58,7 +58,7 @@ export default function ConnectButton({ handleOpenModal }) {
       window.ethereum.on('chainChanged', (chainId) => {
         if(parseInt(chainId, 16) !== parseInt(process.env.NEXT_PUBLIC_NETWORK_ID)){
           deactivate();
-          setError(`Unsopported Chain, connect to ${networks[parseInt(process.env.NEXT_PUBLIC_NETWORK_ID)]} chain`)
+          setError(`Unsupported Chain, connect to ${networks[parseInt(process.env.NEXT_PUBLIC_NETWORK_ID)]} chain`)
         }
         else{
           setError('');

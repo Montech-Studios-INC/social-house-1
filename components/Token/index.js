@@ -22,13 +22,26 @@ import Link from "next/link";
 import { noImage } from "../../helpers/no-image";
 import { FullScreen, useFullScreenHandle } from "react-full-screen";
 import ReactAudioPlayer from "react-audio-player";
-import moment from "moment";
 import { profiles, highestBid, nftHistory, nftDetails } from "../Nav/dummyData";
 import { Player } from 'video-react';
 import ReactPlayer from "react-player";
-
+import moment from 'moment';
+import Timestamp from 'react-timestamp'
 const array = [1, 2, 3, 4, 5, 6, 7, 8];
 let tokenInfo;
+
+const NFTdetails = ({label, value, link, isLink}) => (
+  <Row className='mb-4'>
+  <Col span={12} className='font-bold text-base'>
+    {label}
+  </Col>
+  <Col span={12} className='text-right text-base'>
+    <span className='mr-5'>{value?.length >= 20 ? `${value?.slice(0,15)}...${value?.slice(value?.length - 4,value?.length)}` : value}</span>
+    {isLink ? <a href={link} target="_blank"><i className='fas fa-external-link-alt text-gray-600' /></a> : ''}
+    <i className='fas fa-copy text-gray-600 mx-2' />
+  </Col>
+</Row>
+)
 
 export const useFetch = (data, dispatch, id, contract) => {
   useEffect(() => {
@@ -88,8 +101,7 @@ const Token = ({ id, contract }) => {
   }, 3000);
 
   const handle = useFullScreenHandle();
-  console.log('tokenInfo', tokenInfo);
-  console.log(contract, id)
+  console.log(data)
   return (
     <>
       <div className='flex flex-col '>
@@ -102,8 +114,7 @@ const Token = ({ id, contract }) => {
             !tokenInfo?.metadata?.body && tokenInfo?.metadata?.mimeType?.split("/")[0] !== "audio") && (
             <div className={`my-5 ${tokenData.fetching ? "" : ""}`}>
               {!tokenData.fetching ? (
-                <Image
-                  width='100%'
+                <Image 
                   src={tokenInfo?.image}
                   fallback={noImage}
                   preview={false}
@@ -252,10 +263,6 @@ const Token = ({ id, contract }) => {
               <div className='flex flex-col flex-1'>
                 <p className='font-bold text-gray-500 mb-2 text-xs'>MINTER</p>
                 <div className='flex items-center'>
-                  <img
-                    src={profiles[0].profileImg}
-                    className='w-7 h-7 rounded-full'
-                  />
                   <p className='font-bold ml-2'>
                     {data?.nft?.creator &&
                       `${data?.nft?.creator.slice(
@@ -271,10 +278,6 @@ const Token = ({ id, contract }) => {
               <div className='flex flex-col flex-1'>
                 <p className='font-bold text-gray-500 mb-2 text-xs'>OWNER</p>
                 <div className='flex items-center'>
-                  <img
-                    src={profiles[1].profileImg}
-                    className='w-7 h-7 rounded-full'
-                  />
                   <p className='font-bold ml-2'>
                     {data?.nft?.owner &&
                       `${data?.nft?.owner.slice(
@@ -299,38 +302,42 @@ const Token = ({ id, contract }) => {
                 </span>
               </div>
               <div className='flex flex-col'>
-                {nftHistory.map((bid, index) => {
+                {data?.pricing?.reserve?.previousBids.length === 0 && (<div className="p-5"><p className="text-gray-500">There is no History for this NFT</p></div>)}
+                {data?.pricing?.reserve?.previousBids.length !== 0 && data?.pricing?.reserve?.previousBids.map((bid) => {
                   return (
-                    <div key={index} className='mb-4'>
+                    <div key={bid.id} className='mb-4'>
                       <Row align='middle'>
-                        <Col span={1}>
-                          <img
-                            src={profiles[0].profileImg}
-                            className='w-9 h-7 rounded-full'
-                            alt='big_img'
-                          />
-                        </Col>
                         <Col span={20} className='pl-3 font-bold'>
-                          {bid.bidderId}
+                        {bid.bidder.id &&
+                      `${bid.bidder.id.slice(
+                        0,
+                        15
+                      )}...${bid.bidder.id.slice(
+                        bid.bidder.id.length - 4,
+                        bid.bidder.id.length
+                      )}`}
                           <span className='pl-2 text-gray-500 font-normal'>
-                            {bid.status}
+                            {'Placed a bid'}
                           </span>
                           <div className='text-gray-500 text-xs font-normal mt-2'>
-                            {bid.timeStamp}{" "}
+                            {/* {moment(bid.createdAtTimestamp).format('MMMM Do YYYY, h:mm:ss a')}{" "} */}
+                             <Timestamp date={bid.createdAtTimestamp} /> 
+                             <a href={`https://rinkeby.etherscan.io/tx/${bid.transactionHash}`} target="_blank">
                             <img
-                              src={bid.etherium}
-                              className='w-3 h-3 rounded-full inline'
+                              src={'https://zora.co/assets/icon/etherscan.svg'}
+                              className='w-3 h-3 rounded-full inline mx-2'
                               alt='etherium_link'
                             />
+                            </a>
                           </div>
                         </Col>
                         <Col span={3} className='font-bold text-right'>
-                          {bid.amountEth}
+                          {bid.pricing.amount} {` ${bid.pricing.currency.symbol}`}
                           <div
                             span={4}
                             className='text-gray-500 text-xs font-normal mt-2'
                           >
-                            {bid.amountUSD}
+                            {bid.bidType}
                           </div>
                         </Col>
                       </Row>
@@ -349,20 +356,11 @@ const Token = ({ id, contract }) => {
                 </span>
               </div>
               <div className='flex flex-col'>
-                {nftDetails.map((dt, index) => {
-                  return (
-                    <Row className='mb-4' key={index}>
-                      <Col span={12} className='font-bold text-base'>
-                        {dt.label}
-                      </Col>
-                      <Col span={12} className='text-right text-base'>
-                        <span className='mr-5'>{dt.value}</span>
-                        <i className='fas fa-external-link-alt text-gray-600 ' />{" "}
-                        <i className='fas fa-copy text-gray-600' />
-                      </Col>
-                    </Row>
-                  );
-                })}
+                <NFTdetails  label='Contract Address' value={data?.nft?.contract?.address} link={`https://rinkeby.etherscan.io/address/${data?.nft?.contract?.address}`} isLink={true}/>
+                <NFTdetails  label='Token ID' value={data?.nft?.tokenId}  isLink={false}/>
+                <NFTdetails  label='Blockchain' value={'Ethereum'} isLink={false} />
+                <NFTdetails  label='IPFS' value={''} link={`${data?.zoraNFT.contentURI}`} isLink={true}/>
+                <NFTdetails  label='IPFS Metadata' value={''} link={`${data?.nft.metadataURI}`} isLink={true}/>
               </div>
             </div>
           </div>

@@ -29,8 +29,47 @@ import { noImage } from "../../helpers/no-image";
 import Link from "next/link";
 import { useNFT, useZNFT } from '@zoralabs/nft-hooks'
 import ReactPlayer from 'react-player'
+import { Modal, Button } from 'antd';
+import { MediaFetchAgent, Networks } from '@zoralabs/nft-hooks'
+
 
 const array = [1, 2, 3, 4, 5, 6, 7, 8];
+
+
+const NFTModal = ({token, tokenInfo}) => {
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [index, setIndex] = useState(index)
+
+  const { data, error } = useZNFT(token.nft.tokenData.address, token.nft.tokenData.tokenId)
+  
+  console.log(data)  
+
+  const showModal = (token) => {
+    setIsModalVisible(true);
+  };
+
+  const handleOk = () => {
+    setIsModalVisible(false);
+  };
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
+  };
+
+  return (
+    <>
+      <button onClick={()=>{showModal(token)}} className={`bg-black text-white font-bold rounded px-4 py-2 outline-none w-full mt-2`} >Action</button>
+      <Modal title="Basic Modal" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
+        <div>
+          <div className="flex flex-row justify-between">
+            <p className="mt-4">List {tokenInfo.metadata?.name} NFT?: </p>
+            <button className={`bg-black text-white font-light rounded px-4 py-2 outline-none w-1/3 mt-2 text-sm`} >click here to List</button>
+          </div>
+        </div>
+      </Modal>
+    </>
+  );
+};
 
 const ListItemComponent = () => {
   const {
@@ -109,6 +148,8 @@ const RenderOwnedList = ({ account, openModal }) => {
       </div>
     );
   }
+
+  
 
 
   return data.tokens.map((token) => {
@@ -248,7 +289,7 @@ const RenderOwnedList = ({ account, openModal }) => {
                       </Row>
                     </div>
                   </Link>
-                  <ListItemComponent />
+                  <NFTModal token={token} tokenInfo={tokenInfo} />
                 </div>
       </div>
     );
@@ -298,10 +339,6 @@ export default function List() {
     // setIsModalVisible(true);
     actions.changeAuthModal(!showModal)(setShowModal);
   };
-
-  const { data, error } = useNFT('0x8d04a8c79ceb0889bdd12acdf3fa9d207ed3ff63', '2')
-
-  console.log(data)
 
   return (
     <>
