@@ -221,126 +221,140 @@ const PlaceOffer = ({id, contract}) => {
 
   return (
       <>
-     <div className="flex flex-row bg-gray-500 mt-20 justify-between">
-         <div className="bg-gray-300 px-10 py-4 w-1/2">
-         <Row justify="center" >
-          <div className={`bg-gray-300 mt-10 flex flex-col items-center justify-around`}>
-              <Col
-                sm={24}
-                md={24}
-                lg={24}
-                key={`${tokenInfo?.tokenId}/${new Date().getTime() / 1000}`}
-                className=" bg-white mx-4 h-9/12 mb-5 tags rounded-lg  border-2 border-gray-100 w-full  shadow-md hover:shadow-xd cursor-pointer"
-              >
-                {(tokenInfo?.metadata?.mimeType?.split("/")[0] === "image" ||
-                  !tokenInfo?.metadata?.body) && (
-                  <Image
-                      
-                      align="center"
-                      preview={true}
-                      height={300}
-                      className="h-72 w-full object-cover card-img-top rounded-t-lg"
-                      src={tokenInfo?.image}
-                      fallback={noImage}
-                    />
-                )}
-                {tokenInfo?.metadata.body &&
-                  tokenInfo.metadata?.body?.mimeType.split("/")[0] ===
-                    "audio" && (
-                      <Image
-                      height={300}
-                      preview={true}
-                      className="h-72 w-full object-cover card-img-top rounded-t-lg"
-                      src={tokenInfo.metadata.body.artwork.info.uri}
-                      fallback={noImage}                      />
-                  )}
-                  {!tokenInfo?.metadata?.body && tokenInfo?.metadata?.image && (
-                      <Image
-                      height={300}
-                      preview={true}
-                      className="h-72 w-full object-cover card-img-top rounded-t-lg"
-                      src={tokenInfo?.metadata?.image}
-                      fallback={noImage}                      />
-                  )}
-              <Link href={`/token/${tokenInfo?.tokenContract}/${tokenInfo?.tokenId}`}>
-                <div className="p-4 border border-gray-300 rounded-md tags">
-                  <Row align="middle" className="mb-2">
-                    <Col span={12} className="font-bold text-sm">
-                      {tokenInfo?.metadata?.name && tokenInfo?.metadata?.name}
-                      {tokenInfo?.metadata?.body && tokenInfo?.metadata?.body?.title}
-                    </Col>
-                    <Col span={12} align="right">
-                      {tokenInfo?.metadata?.body &&
-                        tokenInfo?.metadata?.body?.mimeType?.split("/")[0] ===
-                          "audio" && (
-                          <div className="flex items-center justify-center bg-black rounded-full p-2 text-white font-bold w-min">
-                            <i class="fas fa-volume-up"></i>
-                          </div>
-                        )}
-                      {(tokenInfo?.metadata?.mimeType?.split("/")[0] ===
-                        "image" ||
-                        !tokenInfo?.metadata?.body) && (
-                        <div className="flex items-center justify-center bg-black rounded-full p-2 text-white font-bold w-min">
-                          <i class="fas fa-image"></i>
+     <div className="flex flex-col md:flex-row pt-20 h-screen">
+     <div className='bg-gray-100 flex items-center justify-center w-full md:w-1/2'>
+        <Row justify='center' className='w-12/13 mt-5 md:mt-0 md:w-1/2'>
+          <Col
+            sm={24}
+            md={24}
+            lg={24}
+            key={`${tokenInfo?.tokenId}/${new Date().getTime() / 1000}`}
+            className=' bg-white mx-4 h-9/12 mb-5 tags rounded-lg  border-2 border-gray-100 w-full  shadow-md hover:shadow-xd cursor-pointer'
+          >
+            {(tokenInfo?.metadata?.mimeType?.split("/")[0] === "image" ||
+              !tokenInfo?.metadata?.body) && (
+              <Image
+                align='center'
+                preview={false}
+                className='h-auto w-full object-cover card-img-top rounded-t-lg'
+                src={tokenInfo?.image}
+                fallback={noImage}
+                style={{ minHeight: 300 }}
+              />
+            )}
+            {tokenInfo?.metadata.body &&
+              tokenInfo.metadata?.body?.mimeType.split("/")[0] ===
+                "audio" && (
+                <Image
+                  preview={false}
+                  className='h-auto w-full object-cover card-img-top rounded-t-lg'
+                  src={tokenInfo.metadata.body.artwork.info.uri}
+                  fallback={noImage}
+                  style={{ minHeight: 300 }}
+                />
+              )}
+            {!tokenInfo?.metadata?.body && tokenInfo?.metadata?.image && (
+              <Image
+                preview={false}
+                className='h-auto w-full object-cover card-img-top rounded-t-lg'
+                src={tokenInfo?.metadata?.image}
+                fallback={noImage}
+                style={{ minHeight: 300 }}
+              />
+            )}
+            <Link
+              href={`/token/${tokenInfo?.tokenContract}/${tokenInfo?.tokenId}`}
+            >
+              <div className='p-4 border border-gray-300 rounded-md'>
+                <Row align='middle' className='mb-2'>
+                  <Col span={12} className='font-bold text-sm'>
+                    {tokenInfo?.metadata?.name && tokenInfo?.metadata?.name}
+                    {tokenInfo?.metadata?.body &&
+                      tokenInfo?.metadata?.body?.title}
+                  </Col>
+                  <Col span={12} align='right'>
+                    {tokenInfo?.metadata?.body &&
+                      tokenInfo?.metadata?.body?.mimeType?.split("/")[0] ===
+                        "audio" && (
+                        <div className='flex items-center justify-center bg-black rounded-full p-2 text-white font-bold w-min'>
+                          <i class='fas fa-volume-up'></i>
                         </div>
                       )}
-                      {(!tokenInfo?.metadata?.body && tokenInfo?.metadata?.image && (
-                        <div className="flex items-center justify-center bg-black rounded-full p-2 text-white font-bold w-min">
-                          <i class="fas fa-video"></i>
+                    {(tokenInfo?.metadata?.mimeType?.split("/")[0] ===
+                      "image" ||
+                      !tokenInfo?.metadata?.body) && (
+                      <div className='flex items-center justify-center bg-black rounded-full p-2 text-white font-bold w-min'>
+                        <i class='fas fa-image'></i>
+                      </div>
+                    )}
+                    {!tokenInfo?.metadata?.body &&
+                      tokenInfo?.metadata?.image && (
+                        <div className='flex items-center justify-center bg-black rounded-full p-2 text-white font-bold w-min'>
+                          <i class='fas fa-video'></i>
                         </div>
-                      ))}
-                      
-                    </Col>
-                  </Row>
-                  <Row className="w-full mb-5" align="middle">
-                    <Col>
-                      <img
-                        src="/fpo/favicon.png"
-                        className="w-5 h-5 rounded-full"
-                      />
-                    </Col>
-                    <Col className="ml-2">Zora</Col>
-                  </Row>
-                  <Row
-                    className="border-t-2 py-2 border-gray-200"
-                    align="middle"
-                  >
-                  {data?.pricing?.reserve?.status === "Active" &&(
-                  <Col span={12}>
-                      <span className="block text-gray-500 text-md">Current Offer</span>
-                      <span className="font-bold text-md">
-                      {data?.pricing?.reserve?.current.highestBid?.pricing.amount ? parseFloat(formatEther(data?.pricing?.reserve?.current.highestBid?.pricing.amount)).toFixed(3) + data?.pricing?.reserve?.current.highestBid?.pricing.currency.symbol : "N/A"}
+                      )}
+                  </Col>
+                </Row>
+                <Row className='w-full mb-5' align='middle'>
+                  <Col>
+                    <img
+                      src='/fpo/favicon.png'
+                      className='w-5 h-5 rounded-full'
+                    />
+                  </Col>
+                  <Col className='ml-2'>Zora</Col>
+                </Row>
+                <Row
+                  className='border-t-2 py-2 border-gray-200'
+                  align='middle'
+                >
+                  {data?.pricing?.reserve?.status === "Active" && (
+                    <Col span={12}>
+                      <span className='block text-gray-500 text-md'>
+                        Current Bid
+                      </span>
+                      <span className='font-bold text-md'>
+                        {data?.pricing?.reserve?.current.highestBid?.pricing
+                          .amount
+                          ? parseFloat(
+                              formatEther(
+                                data?.pricing?.reserve?.current.highestBid
+                                  ?.pricing.amount
+                              )
+                            ).toFixed(3) +
+                            data?.pricing?.reserve?.current.highestBid
+                              ?.pricing.currency.symbol
+                          : "N/A"}
                       </span>
                     </Col>
                   )}
-                        <>
-                        <Col span={12} className="transition-all duration-300">
+                  <>
+                    <Col span={12} className='transition-all duration-300'>
                       <Row>
                         <Col>
-                          <span className="text-gray-500 text-sm">
-                          In 12d 8hrs 2s{" "}
+                          <span className='text-gray-500 text-sm'>
+                            In 12d 8hrs 2s{" "}
                           </span>
                         </Col>
                         <Col>
-                          <div className="inline-block ml-2 shadow-md animate-ping bg-red-500 w-1 h-1 rounded-full "></div>
+                          <div className='inline-block ml-2 shadow-md animate-ping bg-red-500 w-1 h-1 rounded-full '></div>
                         </Col>
                       </Row>
 
                       <Progress
-                        size="small"
-                        status="exception"
+                        size='small'
+                        status='exception'
                         showInfo={false}
                         percent={20}
                       />
                     </Col>
-                    </>
-                  </Row>
-                </div>
-                </Link>
-              </Col>
-          </div>
-          </Row>
-         </div>
+                  </>
+                </Row>
+              </div>
+            </Link>
+          </Col>
+        </Row>
+      </div>
          <div className="bg-white px-10 py-4 w-1/2">
                     {!isloggedin && (
                         <div className="mt-20 flex flex-col justify-around items-center">

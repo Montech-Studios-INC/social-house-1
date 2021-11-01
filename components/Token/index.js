@@ -331,8 +331,8 @@ const Token = ({ id, contract }) => {
                             </a>
                           </div>
                         </Col>
-                        <Col span={3} className='font-bold text-right'>
-                          {bid.pricing.amount} {` ${bid.pricing.currency.symbol}`}
+                        <Col span={3} className='font-bold text-xs  text-right'>
+                          {parseFloat(formatEther(bid.pricing.amount)).toFixed(3)}{`${bid.pricing.currency.symbol}`}
                           <div
                             span={4}
                             className='text-gray-500 text-xs font-normal mt-2'
@@ -416,7 +416,7 @@ const Token = ({ id, contract }) => {
                         ).toFixed(3) +
                         data?.pricing?.perpetual?.highestBid?.pricing.currency
                           .symbol
-                      : "N/A"}
+                      : "Not sold yet"}
                   </span>
                 </div>
               )}

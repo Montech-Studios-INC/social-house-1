@@ -9,7 +9,7 @@ import { GetServerSideProps } from "next";
 import { Header } from "../../../../../components/Header";
 import { PageWrapper } from "../../../../../styles/components";
 import Head from "../../../../../components/head";
-import PlaceBid from '../../../../../components/PlaceBid'
+import PlaceBid from "../../../../../components/PlaceBid";
 const styles = {
   theme: {
     lineSpacing: 24,
@@ -41,7 +41,7 @@ export default function Piece({
         description={description}
         ogImage={image}
       />
-            <Header />
+      <Header />
       <MediaConfiguration
         networkId={process.env.NEXT_PUBLIC_NETWORK_ID as NetworkIDs}
         style={styles}
