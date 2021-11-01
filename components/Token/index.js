@@ -110,7 +110,7 @@ const Token = ({ id, contract }) => {
     setLoading(false);
   }, 3000);
 
-  console.log(moment.unix(1639369502).format('l'))
+  console.log(data)
   
   return (
     <>
@@ -422,12 +422,12 @@ const Token = ({ id, contract }) => {
                      <div className='mb-5'>
                        <p className='text-gray-400 text-xs mb-2 font-bold'>
                        <p className='text-gray-400 text-xs mb-2 font-bold'>
-                         Reserve Price
+                         Reserve Price 
                        </p>
                        </p>
                        <div className='flex flex-row'>
                        {/* <Timestamp className='font-bold text-base' date={data.pricing.reserve.approvedTimestamp} />  */}
-                       {data.pricing.reserve.reservePrice.prettyAmount}
+                       {data.pricing.reserve.reservePrice.prettyAmount} {data.pricing.reserve.reservePrice.currency.symbol}
                        </div>
                      </div>
                 </div>

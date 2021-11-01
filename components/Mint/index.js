@@ -171,6 +171,8 @@ const Mint = () => {
       metadataHash
     );
 
+    console.log(metadata, mediaData )
+
     // // Verifies hashes of content to ensure the hashes match
     // const verified = await isMediaDataVerified(mediaData);
     // console.log('verification', verified)
@@ -213,6 +215,11 @@ const Mint = () => {
   }
   catch(error){
     console.log(error)
+    notification["error"]({
+      message: `Failed to Mint ${name} NFT`,
+      description: error.message.length > 200 ? error.message.substring(120, 290) : 'Something went wrong',
+    });
+    setMintLoading(false)
   }
   };
 

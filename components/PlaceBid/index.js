@@ -251,8 +251,8 @@ const PlaceBid = ({ id, contract }) => {
                   style={{ minHeight: 300 }}
                 />
               )}
-              {tokenInfo?.metadata.body &&
-                tokenInfo.metadata?.body?.mimeType.split("/")[0] ===
+              {tokenInfo?.metadata?.body &&
+                tokenInfo?.metadata?.body?.mimeType.split("/")[0] ===
                   "audio" && (
                   <Image
                     preview={false}
@@ -332,7 +332,7 @@ const PlaceBid = ({ id, contract }) => {
                                 )
                               ).toFixed(3) +
                               data?.pricing?.reserve?.current.highestBid
-                                ?.pricing.currency.symbol
+                                ?.pricing?.currency.symbol
                             : "No Current bid"}
                         </span>
                       </Col>

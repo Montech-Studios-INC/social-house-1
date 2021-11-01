@@ -540,7 +540,7 @@ const Action = ({ id, contract, name }) => {
                        </p>
                        <div className='flex flex-row'>
                        {/* <Timestamp className='font-bold text-base' date={data.pricing.reserve.approvedTimestamp} />  */}
-                       {data.pricing.reserve.reservePrice.prettyAmount}
+                       {data.pricing.reserve.reservePrice.prettyAmount} {data.pricing.reserve.reservePrice.currency.symbol}
                        </div>
                      </div>
                    </div>

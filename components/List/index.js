@@ -156,7 +156,7 @@ const RenderOwnedList = ({ account, openModal }) => {
     );
   }
 
-  
+  console.log(data)
 
 
   return data.tokens.map((token) => {

@@ -12,10 +12,12 @@ import {
   ModalCloseButton,
   Text,
 } from "@chakra-ui/react";
+import {useState} from 'react'
 import { ExternalLinkIcon, CopyIcon } from "@chakra-ui/icons";
 import { useEthers } from "@usedapp/core";
 import Identicon from "./Identicon";
 import { Tooltip } from 'antd';
+import CopyWallet from './CopyWallet';
 type Props = {
   isOpen: any;
   onClose: any;
@@ -23,7 +25,7 @@ type Props = {
 
 export default function AccountModal({ isOpen, onClose }: Props) {
   const { account, deactivate } = useEthers();
-
+  const [toolTip, setToolTip] = useState('Copy')
   function handleDeactivateAccount() {
     deactivate();
     onClose();
@@ -113,8 +115,8 @@ export default function AccountModal({ isOpen, onClose }: Props) {
                   color: "gray.600",
                 }}
               >
-                <CopyIcon mr={1} />
-                Copy Address
+                <CopyWallet value={account}/>
+             
               </Button>
               <Link
                 fontSize="sm"
