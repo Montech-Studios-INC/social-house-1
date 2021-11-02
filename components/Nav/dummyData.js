@@ -1,7 +1,7 @@
 export const wallets = [
   {
     icon: "/images/metamask.webp",
-    label: "WalletConnect",
+    label: "MetaMask",
   },
 ];
 

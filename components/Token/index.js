@@ -28,8 +28,8 @@ import ReactPlayer from "react-player";
 import moment from 'moment';
 import Timestamp from 'react-timestamp'
 import {CopyToClipboard} from 'react-copy-to-clipboard';
+import Countdown from 'react-countdown';
 
-const array = [1, 2, 3, 4, 5, 6, 7, 8];
 let tokenInfo;
 
 const NFTdetails = ({label, value, link, isLink}) => {
@@ -104,13 +104,14 @@ const Token = ({ id, contract }) => {
   useFetch(pager, imgDispatch, id, contract);
 
   const { data, error } = useNFT(contract, id);
-  const { metadata } = useNFTMetadata(data && data.metadataURI);
+  const { metadata } = useNFTMetadata(data?.nft?.metadataURI);
 
   setTimeout(() => {
     setLoading(false);
   }, 3000);
 
   console.log(data)
+
   
   return (
     <>
@@ -122,7 +123,7 @@ const Token = ({ id, contract }) => {
         >
           {(tokenInfo?.metadata?.mimeType?.split("/")[0] === "image" ||
             (!tokenInfo?.metadata?.body && tokenInfo?.metadata?.mimeType?.split("/")[0] !== "audio" && tokenInfo?.metadata?.mimeType?.split("/")[0] !== "video")) && (
-            <div className={`my-5 ${tokenData.fetching ? "" : ""}`}>
+            <div className={`my-5 ${tokenData.fetching ? "" : " w-96"}`}>
               {!tokenData.fetching ? (
                 <Image 
                   src={tokenInfo?.image}
@@ -235,10 +236,10 @@ const Token = ({ id, contract }) => {
             )}
 
             <div className='flex flex-col'>
-              {tokenInfo?.metadata?.name && (
+              {(tokenInfo?.metadata?.name || metadata?.name) && !tokenData.fetching && (
                 <div className='my-5'>
                   <p className='text-4xl font-bold w-11/12'>
-                    {tokenInfo?.metadata?.name}
+                    {tokenInfo?.metadata?.name || metadata?.name}
                   </p>
                 </div>
               )}
@@ -254,10 +255,10 @@ const Token = ({ id, contract }) => {
                   <div className='bg-gray-200 w-32 animate-pulse h-6 rounded-md'></div>
                 </div>
               )}
-              {tokenInfo?.metadata?.description && (
+              {(tokenInfo?.metadata?.description || metadata?.description) && !tokenData.fetching && (
                 <div className='my-5'>
                   <p className='text-sm font-light w-11/12'>
-                    {tokenInfo?.metadata?.description}
+                    {tokenInfo?.metadata?.description || metadata?.description}
                   </p>
                 </div>
               )}
@@ -312,7 +313,7 @@ const Token = ({ id, contract }) => {
                 </span>
               </div>
               <div className='flex flex-col'>
-                {data?.pricing?.reserve?.previousBids.length === 0 && (<div className="p-5"><p className="text-gray-500">There is no History for this NFT</p></div>)}
+                {(data?.pricing?.reserve?.previousBids.length === 0 || data?.pricing?.reserve === undefined) && (<div className="p-5"><p className="text-gray-500">There is no History for this NFT</p></div>)}
                 {data?.pricing?.reserve?.previousBids.length !== 0 && data?.pricing?.reserve?.previousBids.map((bid) => {
                   return (
                     <div key={bid.id} className='mb-4'>
@@ -387,13 +388,12 @@ const Token = ({ id, contract }) => {
                       HIGHEST BID
                     </span>
                     <p className='font-bold text-2xl'>
-                    {data?.pricing?.reserve?.previousBids[0]?.pricing?.prettyAmount
+                    {data?.pricing?.reserve?.currentBid?.pricing?.prettyAmount
                          ? parseFloat(
-                               data?.pricing?.reserve?.previousBids[0]?.pricing.prettyAmount
+                               data?.pricing?.reserve?.currentBid?.pricing?.prettyAmount
                            ).toFixed(3) +
-                           data?.pricing?.reserve?.previousBids[0]?.pricing?.currency
-                             .symbol
-                         : "Not sold yet"}
+                           data?.pricing?.reserve?.currentBid?.pricing?.currency?.symbol
+                         : "No Highest Bid yet"}
                     </p>
                   </div>
                   {data?.pricing?.reserve?.expectedEndTimestamp && (
@@ -402,7 +402,8 @@ const Token = ({ id, contract }) => {
                       AUCTION ENDS
                     </p>
                     <div className='flex flex-row'>
-                    {moment.unix(data?.pricing?.reserve?.expectedEndTimestamp).format('LL')}
+                    {/* {moment.unix(data?.pricing?.reserve?.expectedEndTimestamp).format('LL')} */}
+                    <Countdown date={moment.unix(data?.pricing?.reserve?.expectedEndTimestamp).format()} />
                       <div className='inline-block ml-2 mt-1 shadow-md animate-ping bg-red-500 w-1 h-1 rounded-full '></div>
                     </div>
                   </div>
@@ -439,15 +440,13 @@ const Token = ({ id, contract }) => {
                     SOLD
                   </p>
                   <span className='font-bold text-2xl'>
-                    {data?.pricing?.perpetual?.highestBid?.pricing.amount
-                      ? parseFloat(
-                          formatEther(
-                            data?.pricing?.perpetual?.highestBid?.pricing.amount
-                          )
-                        ).toFixed(3) +
-                        data?.pricing?.perpetual?.highestBid?.pricing.currency
-                          .symbol
-                      : "Sold"}
+                  {data?.pricing?.reserve?.previousBids[0].pricing.prettyAmount
+                         ? parseFloat(
+                               data?.pricing?.reserve?.previousBids[0].pricing.prettyAmount
+                           ).toFixed(3) +
+                           data?.pricing?.reserve?.previousBids[0].pricing.currency
+                             .symbol
+                         : "Sold"}
                   </span>
                 </div>
               )}

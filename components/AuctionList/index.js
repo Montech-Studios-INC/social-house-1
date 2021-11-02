@@ -183,7 +183,7 @@ export const AuctionsList = () => {
 
   // const {metadata} = useNFTMetadata(data && data.metadataURI);
   // const { data, error } = useNFT('0xe8e1b3125372e4912773357691AeB7C305584751', '1')
-  // console.log('acution', data)
+  console.log(tokenData)
   return (
     <Wrapper>
       <div
@@ -195,7 +195,6 @@ export const AuctionsList = () => {
           loading === false &&
           list.map((token) => {
             const tokenInfo = FetchStaticData.getIndexerServerTokenInfo(token);
-            console.log("token info", tokenInfo);
             return (
               <div className=" w-full sm:w-full md:w-1/2 lg:w-1/4">
               <div
@@ -227,7 +226,7 @@ export const AuctionsList = () => {
                   // />
                   <ReactPlayer url={tokenInfo?.image} playing loop className='h-72 w-full object-cover card-img-top rounded-t-lg'/>
                 )}
-                  {tokenInfo.metadata.body &&
+                  {tokenInfo.metadata?.body &&
                     tokenInfo.metadata?.body?.mimeType.split("/")[0] ===
                       "audio" && (
                       <Image
@@ -235,11 +234,11 @@ export const AuctionsList = () => {
                         width='100%'
                         preview={false}
                         className='h-72 w-full object-cover card-img-top rounded-t-lg'
-                        src={tokenInfo.metadata.body.artwork.info.uri}
+                        src={tokenInfo.metadata?.body?.artwork?.info.uri}
                         fallback={noImage}
                       />
                     )}
-                  {!tokenInfo.metadata.body && tokenInfo.metadata.image && (
+                  {!tokenInfo?.metadata?.body && tokenInfo.metadata?.image && (
                     <Image
                       height={300}
                       width='100%'
@@ -326,11 +325,11 @@ export const AuctionsList = () => {
                               Sold at
                             </span>
                             <span className='font-bold text-md'>
-                              {token?.nft?.tokenData?.auctions[0].lastBidAmount
+                              {token?.nft?.tokenData?.auctions[0]?.lastBidAmount
                                 ? parseFloat(
                                     formatEther(
                                       token?.nft?.tokenData?.auctions[0]
-                                        .lastBidAmount
+                                        ?.lastBidAmount
                                     )
                                   ).toFixed(3) + " ETH"
                                 : "N/A"}
@@ -344,23 +343,27 @@ export const AuctionsList = () => {
                             span={12}
                             className='transition-all duration-300'
                           >
+                            <Col>
+                          <span className='text-gray-500 text-sm'>
+                           Ends In
+                          </span>
+                        </Col>
                             <Row>
+                            {/* <Progress
+                                size='small'
+                                status='exception'
+                                showInfo={false}
+                                percent={10}
+                              /> */}
                               <Col>
                                 <span className='text-gray-500 text-sm'>
-                                {moment.unix(token?.nft?.auctionData.expectedEndTimestamp).format('LL')}
+                                <Countdown date={moment.unix(token?.nft?.auctionData.expectedEndTimestamp).format()} />
                                 </span>
                               </Col>
                               <Col>
                                 <div className='inline-block ml-2 shadow-md animate-ping bg-red-500 w-1 h-1 rounded-full '></div>
                               </Col>
                             </Row>
-
-                              <Progress
-                                size='small'
-                                status='exception'
-                                showInfo={false}
-                                percent={10}
-                              />
                             </Col>
                           </>
                         ) : (

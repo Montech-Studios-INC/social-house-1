@@ -171,9 +171,9 @@ const Mint = () => {
       metadataHash
     );
 
-    console.log(metadata, mediaData )
 
     // // Verifies hashes of content to ensure the hashes match
+    
     // const verified = await isMediaDataVerified(mediaData);
     // console.log('verification', verified)
     // if (!verified){
@@ -189,7 +189,8 @@ const Mint = () => {
       0 // prevOwner share percentage
     );
     const tx = await zora.mint(mediaData, bidShares);
-    console.log(tx);
+
+    console.log(tx)
     if (tx) {
       setMintLoading(false);
       notification["success"]({
@@ -217,7 +218,7 @@ const Mint = () => {
     console.log(error)
     notification["error"]({
       message: `Failed to Mint ${name} NFT`,
-      description: error.message.length > 200 ? error.message.substring(120, 290) : 'Something went wrong',
+      description: error?.message?.length > 200 ? error?.message?.substring(120, 290) : 'Something went wrong',
     });
     setMintLoading(false)
   }

@@ -341,12 +341,12 @@ const PlaceOffer = ({id, contract}) => {
                         </Col>
                       </Row>
 
-                      <Progress
+                      {/* <Progress
                         size='small'
                         status='exception'
                         showInfo={false}
                         percent={20}
-                      />
+                      /> */}
                     </Col>
                   </>
                 </Row>

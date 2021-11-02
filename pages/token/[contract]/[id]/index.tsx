@@ -4,6 +4,8 @@ import {
   MediaFetchAgent,
   NetworkIDs,
   FetchStaticData,
+  useNFTMetadata,
+  useNFT
 } from "@zoralabs/nft-hooks";
 import { GetServerSideProps } from "next";
 import { Header } from "../../../../components/Header";
@@ -74,12 +76,13 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   const fetchAgent = new MediaFetchAgent(
     process.env.NEXT_PUBLIC_NETWORK_ID as NetworkIDs
   );
-  const data = await FetchStaticData.fetchZoraIndexerItem(fetchAgent, {
+  const NFTdata = await FetchStaticData.fetchZoraIndexerItem(fetchAgent, {
     tokenId: id,
     collectionAddress: contract,
   });
 
-  const tokenInfo = FetchStaticData.getIndexerServerTokenInfo(data);
+  const tokenInfo = FetchStaticData.getIndexerServerTokenInfo(NFTdata);
+  
 
   return {
     props: {
@@ -87,7 +90,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
       name: tokenInfo.metadata?.name || null,
       description: tokenInfo.metadata?.description || null,
       image: tokenInfo.image || null,
-      initialData: data,
+      initialData: NFTdata,
     },
   };
 };

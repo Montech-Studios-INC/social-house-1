@@ -210,7 +210,7 @@ const PlaceBid = ({ id, contract }) => {
         )
       : 0;
     newBid = (highestBid * 5) / 100 + highestBid;
-    setPreviousBid(newBid <= 0 ? parseInt(data?.pricing?.reserve?.reservePrice.prettyAmount) : newBid);
+    setPreviousBid(newBid <= 0 ? parseInt(data?.pricing?.reserve?.reservePrice.prettyAmount) || 0.001 : newBid);
   }, [tokenData, data]);
   useEffect(() => {
     setAmount(newBid);
@@ -339,10 +339,15 @@ const PlaceBid = ({ id, contract }) => {
                     )}
                     <>
                       <Col span={12} className='transition-all duration-300'>
+                      <Col>
+                          <span className='text-gray-500 text-sm'>
+                           Ends In
+                          </span>
+                        </Col>
                         <Row>
                           <Col>
-                            <span className='text-gray-500 text-sm'>
-                            {moment.unix(data?.pricing?.reserve?.expectedEndTimestamp).format('LL')}
+                            <span className='text-gray-800 font-bold text-sm'>
+                            <Countdown date={moment.unix(data?.pricing?.reserve?.expectedEndTimestamp).format()} />
                             </span>
                           </Col>
                           <Col>
@@ -350,12 +355,12 @@ const PlaceBid = ({ id, contract }) => {
                           </Col>
                         </Row>
 
-                        <Progress
+                        {/* <Progress
                           size='small'
                           status='exception'
                           showInfo={false}
                           percent={20}
-                        />
+                        /> */}
                       </Col>
                     </>
                   </Row>
@@ -408,6 +413,7 @@ const PlaceBid = ({ id, contract }) => {
               </div>
               <p>Your bid must be atleast  {previousBidAmount} ETH</p>
               <p>The next bid must be atleast 5% of the current bid </p>
+              <p>The Reserve price is {data?.pricing?.reserve.reservePrice.prettyAmount} {data?.pricing?.reserve.reservePrice.currency.symbol}</p>
               <button
                 className={`bg-black text-white font-bold rounded px-4 py-4 outline-none w-full mt-6 ${
                   amount < previousBidAmount
@@ -435,7 +441,7 @@ const PlaceBid = ({ id, contract }) => {
                   </Row>
                 )}
               </button>
-              <p>You cannot withdraw a bid once submitted</p>
+              <p className="my-2">You cannot withdraw a bid once submitted</p>
             </div>
           )}
         </div>

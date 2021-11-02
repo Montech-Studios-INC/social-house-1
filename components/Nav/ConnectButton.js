@@ -145,9 +145,11 @@ export default function ConnectButton({ handleOpenModal }) {
           )}
 
           <div className='text-center font-bold pt-10'>
-            <spa class='cursor-pointer hover:text-gray-500 transition-all duration-500'>
+            <a href={'https://metamask.io/'} target="_blank">
+            <span class='cursor-pointer hover:text-gray-500 transition-all duration-500'>
               Dont have a wallet? Get one
-            </spa>
+            </span>
+            </a>
           </div>
         </Modal>
       </>
@@ -204,7 +206,7 @@ export default function ConnectButton({ handleOpenModal }) {
               d='M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z'
             />
           </svg>
-          <p className='text-gray-200 text-sm '>New</p>
+          <p className='text-gray-200 text-sm mb-5'>New</p>
         </button>
       </Dropdown>
     </div>

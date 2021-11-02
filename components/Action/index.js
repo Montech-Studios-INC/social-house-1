@@ -67,6 +67,7 @@ const ManageModal = ({setVisible, visible, handleEndAuction, auctionId, handleCa
             </div>
         </Modal>)
         }
+        {status !== "Active" ? <p className="text-md text-gray-500 font-bold">List This NFT for Auction ?</p> : ''}
         {status !== "Active" ? (
             <div class='w-full my-2 flex flex-col items-center content-center'>
             <div class='mb-4 w-12/13 md:w-1/2 text-justify'>
@@ -248,6 +249,7 @@ const Action = ({ id, contract, name }) => {
         message: 'Ended an auction!',
         description: 'The NFT will be transfered to the winner'
       });
+    setVisible(false)
     }
     catch(error){
         console.log(error);
@@ -307,7 +309,7 @@ const Action = ({ id, contract, name }) => {
   useFetch(pager, imgDispatch, id, contract);
 
   const { data, error } = useNFT(contract, id);
-  const { metadata } = useNFTMetadata(data && data.metadataURI);
+  const { metadata } = useNFTMetadata(data?.nft?.metadataURI);
 
   setTimeout(() => {
     setLoading(false);
@@ -327,7 +329,7 @@ const Action = ({ id, contract, name }) => {
            >
             {(tokenInfo?.metadata?.mimeType?.split("/")[0] === "image" ||
             (!tokenInfo?.metadata?.body && tokenInfo?.metadata?.mimeType?.split("/")[0] !== "audio" && tokenInfo?.metadata?.mimeType?.split("/")[0] !== "video")) && (
-            <div className={`my-5 ${tokenData.fetching ? "" : ""}`}>
+            <div className={`my-5 ${tokenData.fetching ? "" : "w-96"}`}>
               {!tokenData.fetching ? (
                 <Image 
                   src={tokenInfo?.image}
@@ -440,13 +442,13 @@ const Action = ({ id, contract, name }) => {
         
    
                <div className='flex flex-col'>
-                 {tokenInfo?.metadata?.name && (
-                   <div className='my-5'>
-                     <p className='text-4xl font-bold w-11/12'>
-                       {tokenInfo?.metadata?.name}
-                     </p>
-                   </div>
-                 )}
+               {(tokenInfo?.metadata?.name || metadata?.name ) && (
+                <div className='my-5'>
+                  <p className='text-4xl font-bold w-11/12'>
+                    {tokenInfo?.metadata?.name || metadata?.name}
+                  </p>
+                </div>
+              )}
                  {tokenInfo?.metadata?.body && (
                    <div className='my-5'>
                      <p className='text-4xl font-bold w-11/12'>
@@ -459,13 +461,13 @@ const Action = ({ id, contract, name }) => {
                      <div className='bg-gray-200 w-32 animate-pulse h-6 rounded-md'></div>
                    </div>
                  )}
-                 {tokenInfo?.metadata?.description && (
-                   <div className='my-5'>
-                     <p className='text-sm font-light w-11/12'>
-                       {tokenInfo?.metadata?.description}
-                     </p>
-                   </div>
-                 )}
+                 {(tokenInfo?.metadata?.description || metadata?.description)  && (
+                <div className='my-5'>
+                  <p className='text-sm font-light w-11/12'>
+                    {tokenInfo?.metadata?.description || metadata?.description}
+                  </p>
+                </div>
+              )}
                  {tokenData.fetching && (
                    <div className='my-5'>
                     <div className='bg-gray-200 w-11/12 animate-pulse h-6 my-2 rounded-md'></div>
@@ -515,7 +517,7 @@ const Action = ({ id, contract, name }) => {
                          AUCTION ENDS
                        </p>
                        <div className='flex flex-row'>
-                       {moment.unix(data?.pricing?.reserve?.expectedEndTimestamp).format('LL')}
+                       <Countdown date={moment.unix(data?.pricing?.reserve?.expectedEndTimestamp).format()} />
                          <div className='inline-block ml-2 mt-1 shadow-md animate-ping bg-red-500 w-1 h-1 rounded-full '></div>
                        </div>
                      </div>
