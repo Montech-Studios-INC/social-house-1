@@ -35,6 +35,11 @@ import { MediaFetchAgent, Networks } from '@zoralabs/nft-hooks'
 import { Tabs } from 'antd';
 import Countdown from 'react-countdown';
 import moment from 'moment';
+import {
+  convertFromUnixToPercent,
+  changeProgressColor,
+} from "../../helpers/convertTimeToPercentage";
+import { slice, concat, round } from "lodash";
 
 const { TabPane } = Tabs;
 
@@ -147,6 +152,20 @@ const EachNFT = ({tokenInfo, token}) => (<div className='w-full mx-2 sm:w-full m
       <Row className='w-full mb-5' align='middle'>
         {token?.nft?.auctionData?.expectedEndTimestamp ?
         <>
+      <Progress
+        size='small'
+        status={changeProgressColor(
+          convertFromUnixToPercent(
+            token?.nft?.auctionData?.approvedTimestamp,
+            token?.nft?.auctionData?.expectedEndTimestamp
+          )
+        )}
+        showInfo={false}
+        percent={convertFromUnixToPercent(
+          token?.nft?.auctionData?.approvedTimestamp,
+          token?.nft?.auctionData?.expectedEndTimestamp
+        )}
+            />
            <Countdown date={moment.unix(token?.nft?.auctionData?.expectedEndTimestamp).format()} />
            <div className='inline-block ml-2 shadow-md animate-ping bg-red-500 w-1 h-1 rounded-full '></div>
         </>

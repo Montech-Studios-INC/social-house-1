@@ -8,14 +8,16 @@ import React, {
 import { NFTPreview } from "@zoralabs/nft-components";
 import { useRouter } from "next/router";
 import Wrapper from "../Wrapper/index";
-import { useZNFT, useNFTMetadata } from "@zoralabs/nft-hooks";
-import { MediaConfiguration } from "@zoralabs/nft-components";
+import {
+  convertFromUnixToPercent,
+  changeProgressColor,
+} from "../../helpers/convertTimeToPercentage";
+import { slice, concat, round } from "lodash";
 import {
   FetchStaticData,
   MediaFetchAgent,
   NetworkIDs,
 } from "@zoralabs/nft-hooks";
-import { slice, concat } from "lodash";
 import { Row, Col, Progress, Image } from "antd";
 import shortenNum from "short-number";
 import { useNFT } from "@zoralabs/nft-hooks";
@@ -331,18 +333,23 @@ export const AuctionsList = () => {
                             span={12}
                             className='transition-all duration-300'
                           >
-                            <Col>
-                          <span className='text-gray-500 text-sm'>
-                           Ends In
-                          </span>
-                        </Col>
                             <Row>
-                            {/* <Progress
-                                size='small'
-                                status='exception'
-                                showInfo={false}
-                                percent={10}
-                              /> */}
+                            <Progress
+                                  size='small'
+                                  status={changeProgressColor(
+                                    convertFromUnixToPercent(
+                                      token?.nft?.auctionData
+                                        .createdAtTimestamp,
+                                      token?.nft?.auctionData
+                                        .expectedEndTimestamp
+                                    )
+                                  )}
+                                  showInfo={false}
+                                  percent={convertFromUnixToPercent(
+                                    token?.nft?.auctionData.createdAtTimestamp,
+                                    token?.nft?.auctionData.expectedEndTimestamp
+                                  )}
+                                />
                               <Col>
                                 <span className='text-gray-500 text-sm'>
                                 <Countdown date={moment.unix(token?.nft?.auctionData.expectedEndTimestamp).format()} />

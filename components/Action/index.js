@@ -14,7 +14,7 @@ import { formatEther, parseEther } from "@ethersproject/units";
 import VideoAudioText from '../VideoAudioText'
 import NFTGeneralDetails from '../NFTGeneralDetails'
 import ManageModal from './ManageModal';
-import {pageReducer, imgReducer} from '../../helpers/reducers'
+import {pageReducer, imgReducer} from '../../helpers/reducers';
 
 
 let tokenInfo;

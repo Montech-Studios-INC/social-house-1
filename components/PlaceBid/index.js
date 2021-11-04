@@ -8,7 +8,7 @@ import { formatEther, parseEther } from "@ethersproject/units";
 import Link from "next/link";
 import { noImage } from "../../helpers/no-image";
 import moment from "moment";
-import { Row, Col, Image } from "antd";
+import { Row, Col, Image, Progress } from "antd";
 import { useEthers, useEtherBalance } from "@usedapp/core";
 import * as actions from "../../contexts/actions";
 import { Zora } from "@zoralabs/zdk";
@@ -20,6 +20,10 @@ import { Divider } from "antd";
 import Countdown from 'react-countdown'
 import { Typography } from "@mui/material";
 import {pageReducer, imgReducer} from '../../helpers/reducers'
+import {
+  convertFromUnixToPercent,
+  changeProgressColor,
+} from "../../helpers/convertTimeToPercentage";
 
 let tokenInfo;
 
@@ -298,12 +302,20 @@ const PlaceBid = ({ id, contract }) => {
                           </Col>
                         </Row>
 
-                        {/* <Progress
-                          size='small'
-                          status='exception'
-                          showInfo={false}
-                          percent={20}
-                        /> */}
+                        <Progress
+                            size='small'
+                            status={changeProgressColor(
+                              convertFromUnixToPercent(
+                                data?.pricing?.reserve?.createdAtTimestamp,
+                                data?.pricing?.reserve?.expectedEndTimestamp
+                              )
+                            )}
+                            showInfo={false}
+                            percent={convertFromUnixToPercent(
+                              data?.pricing?.reserve?.createdAtTimestamp,
+                              data?.pricing?.reserve?.expectedEndTimestamp
+                            )}
+                          />
                       </Col>
                     </>
                   </Row>
