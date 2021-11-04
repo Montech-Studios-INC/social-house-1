@@ -204,9 +204,6 @@ const ListItemComponent = () => {
     nft: { data },
   } = useContext(NFTDataContext);
 
-  // const { data, error } = useNFT('0x7C2668BD0D3c050703CEcC956C11Bd520c26f7d4', '3223');
-
-  // console.log(data)
   const { openManageAuction, openListAuction, openBidAuction } =
     useManageAuction();
 

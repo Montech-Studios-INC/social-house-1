@@ -1,34 +1,16 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useReducer,
-} from "react";
-import { NFTPreview } from "@zoralabs/nft-components";
-import { useRouter } from "next/router";
-import Wrapper from "../Wrapper/index";
-import { useZNFT, useNFTMetadata } from "@zoralabs/nft-hooks";
-import { MediaConfiguration } from "@zoralabs/nft-components";
-import {
-  FetchStaticData,
-  MediaFetchAgent,
-  NetworkIDs,
-} from "@zoralabs/nft-hooks";
-import { Image, Row, Col, Modal, Tooltip } from "antd";
+import React, {useState, useEffect, useReducer} from "react";
+import { useNFTMetadata } from "@zoralabs/nft-hooks";
+import { FetchStaticData, MediaFetchAgent} from "@zoralabs/nft-hooks";
+import { Row, Col, Tooltip } from "antd";
 import { useNFT } from "@zoralabs/nft-hooks";
 import { formatEther } from "@ethersproject/units";
 import Link from "next/link";
-import { noImage } from "../../helpers/no-image";
-import { FullScreen, useFullScreenHandle } from "react-full-screen";
-import ReactAudioPlayer from "react-audio-player";
-import { profiles, highestBid, nftHistory, nftDetails } from "../Nav/dummyData";
-import { Player } from 'video-react';
-import ReactPlayer from "react-player";
-import moment from 'moment';
 import Timestamp from 'react-timestamp'
 import {CopyToClipboard} from 'react-copy-to-clipboard';
-import Countdown from 'react-countdown';
+import VideoAudioText from '../VideoAudioText'
+import NFTGeneralDetails from '../NFTGeneralDetails'
+import AuctionDetails from '../AuctionDetails'
+import {pageReducer, imgReducer} from '../../helpers/reducers'
 
 let tokenInfo;
 
@@ -74,28 +56,6 @@ export const useFetch = (data, dispatch, id, contract) => {
 };
 
 const Token = ({ id, contract }) => {
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
-  const imgReducer = (state, action) => {
-    switch (action.type) {
-      case "STACK_TOKEN":
-        return { ...state, token: state.token.concat(action.token) };
-      case "FETCHING_TOKEN":
-        return { ...state, fetching: action.fetching };
-      default:
-        return state;
-    }
-  };
-
-  const pageReducer = (state, action) => {
-    switch (action.type) {
-      case "ADVANCE_PAGE":
-        return { ...state, page: state.page + 1 };
-      default:
-        return state;
-    }
-  };
-
   const [tokenData, imgDispatch] = useReducer(imgReducer, {
     token: [],
     fetching: true,
@@ -106,124 +66,11 @@ const Token = ({ id, contract }) => {
   const { data, error } = useNFT(contract, id);
   const { metadata } = useNFTMetadata(data?.nft?.metadataURI);
 
-  setTimeout(() => {
-    setLoading(false);
-  }, 3000);
-
-  console.log(data)
-
   
   return (
     <>
       <div className='flex flex-col '>
-        <div
-          className={`my-12 bg-gray-200 w-full ${
-            tokenData.fetching ? "h-96" : "h-auto"
-          } p-10 flex flex-col items-center justify-around`}
-        >
-          {(tokenInfo?.metadata?.mimeType?.split("/")[0] === "image" ||
-            (!tokenInfo?.metadata?.body && tokenInfo?.metadata?.mimeType?.split("/")[0] !== "audio" && tokenInfo?.metadata?.mimeType?.split("/")[0] !== "video")) && (
-            <div className={`my-5 ${tokenData.fetching ? "" : " w-96"}`}>
-              {!tokenData.fetching ? (
-                <Image 
-                  src={tokenInfo?.image}
-                  fallback={noImage}
-                  preview={false}
-                />
-              ) : (
-                <img
-                  className='text-white w-10 h-10 animate-spin mx-4 text-center z-20'
-                  src='/images/spinner-of-dots.png'
-                />
-              )}
-              {/* <div className='w-full my-4'>
-                <div className='bg-white rounded-full w-12 h-12 m-auto flex justify-center items-center cursor-pointer'>
-                  <i class='fas fa-expand text-lg'></i>
-                </div>
-              </div> */}
-            </div>
-          )}
-          {(tokenInfo?.metadata?.mimeType?.split("/")[0] === "audio" ||
-            tokenInfo?.metadata?.body?.mimeType?.split("/")[0] === "audio") && (
-              <div
-                className={`my-5 flex flex-row justify-between ${
-                  tokenData.fetching ? "" : ""
-                }`}
-              >
-                {!tokenData.fetching ? (
-                  <div className='flex flex-col md:flex-row items-center'>
-                    <img
-                      className='rounded-t-lg w-80 h-80 mb-4 md:mr-4'
-                      src={tokenInfo.metadata?.body?.artwork?.info?.uri || tokenInfo?.image}
-                      fallback={noImage}
-                    />
-                    <ReactAudioPlayer src={data?.zoraNFT.contentURI || tokenInfo?.image} controls />
-                  </div>
-                ) : (
-                  <img
-                    className='text-white w-10 h-10 animate-spin mx-4 text-center z-20'
-                    src='/images/spinner-of-dots.png'
-                  />
-                )}
-              </div>
-            )}
-
-          {(tokenInfo?.metadata?.mimeType?.split("/")[0] === "video" ||
-            tokenInfo?.metadata?.body?.mimeType?.split("/")[0] === "video") && (
-              <div
-                className={`my-5 flex flex-row justify-between ${
-                  tokenData.fetching ? "" : ""
-                }`}
-              >
-                {!tokenData.fetching ? (
-                  <div className='flex flex-col md:flex-row items-center'>
-                    {tokenInfo?.metadata?.image_url !== '' && (
-                      <img
-                      className='rounded-t-lg w-80 h-80 mb-4 md:mr-4'
-                      src={tokenInfo?.metadata?.image_url || tokenInfo.metadata?.body?.artwork?.info?.uri}
-                      fallback={noImage}
-                    />
-                    )}
-                    
-                    <ReactPlayer
-                    url={data?.zoraNFT.contentURI || tokenInfo?.image}
-                    playing loop
-                  />
-                  </div>
-                ) : (
-                  <img
-                    className='text-white w-10 h-10 animate-spin mx-4 text-center z-20'
-                    src='/images/spinner-of-dots.png'
-                  />
-                )}
-              </div>
-            )}
-          {!tokenInfo?.metadata?.body && tokenInfo?.metadata?.image && (
-            <div
-              className={`my-5 flex flex-row justify-between ${
-                tokenData.fetching ? "" : ""
-              }`}
-            >
-              {!tokenData.fetching ? (
-                <>
-                  <Image
-                    align='center'
-                    preview={false}
-                    height={600}
-                    className=' object-cover  rounded-t-lg w-full'
-                    src={tokenInfo?.metadata?.image}
-                    fallback={noImage}
-                  />
-                </>
-              ) : (
-                <img
-                  className='text-white w-10 h-10 animate-spin mx-4 text-center z-20'
-                  src='/images/spinner-of-dots.png'
-                />
-              )}
-            </div>
-          )}
-        </div>
+       <VideoAudioText tokenData={tokenData} tokenInfo={tokenInfo} data={data}/>
         <div className='flex flex-col-reverse lg:flex-row py-5 w-12/13 xl:w-2/3 m-auto'>
           <div className='flex flex-col w-full xl:w-1/2 lg:mr-2'>
             {/* bid details */}
@@ -235,73 +82,7 @@ const Token = ({ id, contract }) => {
               </div>
             )}
 
-            <div className='flex flex-col'>
-              {(tokenInfo?.metadata?.name || metadata?.name) && !tokenData.fetching && (
-                <div className='my-5'>
-                  <p className='text-4xl font-bold w-11/12'>
-                    {tokenInfo?.metadata?.name || metadata?.name}
-                  </p>
-                </div>
-              )}
-              {tokenInfo?.metadata?.body && (
-                <div className='my-5'>
-                  <p className='text-4xl font-bold w-11/12'>
-                    {tokenInfo?.metadata?.body?.title}
-                  </p>
-                </div>
-              )}
-              {tokenData.fetching && (
-                <div className='my-5'>
-                  <div className='bg-gray-200 w-32 animate-pulse h-6 rounded-md'></div>
-                </div>
-              )}
-              {(tokenInfo?.metadata?.description || metadata?.description) && !tokenData.fetching && (
-                <div className='my-5'>
-                  <p className='text-sm font-light w-11/12'>
-                    {tokenInfo?.metadata?.description || metadata?.description}
-                  </p>
-                </div>
-              )}
-              {tokenData.fetching && (
-                <div className='my-5'>
-                 <div className='bg-gray-200 w-11/12 animate-pulse h-6 my-2 rounded-md'></div>
-                 <div className='bg-gray-200 w-11/12 animate-pulse h-6 my-2 rounded-md'></div>
-                 <div className='bg-gray-200 w-11/12 animate-pulse h-6 my-2 rounded-md'></div>
-                </div>
-              )}
-            </div>
-            <div className='flex flex-row my-6'>
-              <div className='flex flex-col flex-1'>
-                <p className='font-bold text-gray-500 mb-2 text-xs'>MINTER</p>
-                <div className='flex items-center'>
-                  <p className='font-bold ml-2'>
-                    {data?.nft?.creator &&
-                      `${data?.nft?.creator.slice(
-                        0,
-                        15
-                      )}...${data?.nft?.creator.slice(
-                        data?.nft?.creator.length - 4,
-                        data?.nft?.creator.length
-                      )}`}
-                  </p>
-                </div>
-              </div>
-              <div className='flex flex-col flex-1'>
-                <p className='font-bold text-gray-500 mb-2 text-xs'>OWNER</p>
-                <div className='flex items-center'>
-                  <p className='font-bold ml-2'>
-                    {data?.nft?.owner &&
-                      `${data?.nft?.owner.slice(
-                        0,
-                        15
-                      )}...${data?.nft?.owner.slice(
-                        data?.nft?.owner.length - 4,
-                        data?.nft?.owner.length
-                      )}`}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <NFTGeneralDetails  tokenData={tokenData} tokenInfo={tokenInfo} data={data} metadata={metadata} />
 
             <div
               className='tags p-4 my-5 w-12/13 rounded-lg'
@@ -375,122 +156,8 @@ const Token = ({ id, contract }) => {
               </div>
             </div>
           </div>
-          <div className='w-full xl:w-4/12'>
-            {/* auction details */}
-            <div
-              className='static md:sticky md:top-28 rounded-lg p-4'
-              style={{ border: "2px solid #EBEBEB" }}
-            >
-              {data?.pricing?.reserve?.status === "Active" && (
-                <div>
-                  <div className='flex flex-col mb-5'>
-                    <span className='text-gray-400 text-xs mb-2 font-bold'>
-                      HIGHEST BID
-                    </span>
-                    <p className='font-bold text-2xl'>
-                    {data?.pricing?.reserve?.currentBid?.pricing?.prettyAmount
-                         ? parseFloat(
-                               data?.pricing?.reserve?.currentBid?.pricing?.prettyAmount
-                           ).toFixed(3) +
-                           data?.pricing?.reserve?.currentBid?.pricing?.currency?.symbol
-                         : "No Highest Bid yet"}
-                    </p>
-                  </div>
-                  {data?.pricing?.reserve?.expectedEndTimestamp && (
-                    <div className='mb-5'>
-                    <p className='text-gray-400 text-xs mb-2 font-bold'>
-                      AUCTION ENDS
-                    </p>
-                    <div className='flex flex-row'>
-                    {/* {moment.unix(data?.pricing?.reserve?.expectedEndTimestamp).format('LL')} */}
-                    <Countdown date={moment.unix(data?.pricing?.reserve?.expectedEndTimestamp).format()} />
-                      <div className='inline-block ml-2 mt-1 shadow-md animate-ping bg-red-500 w-1 h-1 rounded-full '></div>
-                    </div>
-                  </div>
-                  )}
-                  
-                  <div className='mb-5'>
-                       <p className='text-gray-400 text-xs mb-2 font-bold'>
-                       <p className='text-gray-400 text-xs mb-2 font-bold'>
-                         Approved At
-                       </p>
-                       </p>
-                       <div className='flex flex-row'>
-                       {/* <Timestamp className='font-bold text-base' date={data.pricing.reserve.approvedTimestamp} />  */}
-                       {moment.unix(data?.pricing?.reserve?.approvedTimestamp).format('LL')}
-                       </div>
-                     </div>
-                     <div className='mb-5'>
-                       <p className='text-gray-400 text-xs mb-2 font-bold'>
-                       <p className='text-gray-400 text-xs mb-2 font-bold'>
-                         Reserve Price 
-                       </p>
-                       </p>
-                       <div className='flex flex-row'>
-                       {/* <Timestamp className='font-bold text-base' date={data.pricing.reserve.approvedTimestamp} />  */}
-                       {data.pricing.reserve.reservePrice.prettyAmount} {data.pricing.reserve.reservePrice.currency.symbol}
-                       </div>
-                     </div>
-                </div>
-              )}
-
-              {data?.pricing?.reserve?.status === "Finished" && (
-                <div className='flex flex-col mb-5'>
-                  <p className='text-gray-400 text-xs mb-2 font-bold'>
-                    SOLD
-                  </p>
-                  <span className='font-bold text-2xl'>
-                  {data?.pricing?.reserve?.previousBids[0].pricing.prettyAmount
-                         ? parseFloat(
-                               data?.pricing?.reserve?.previousBids[0].pricing.prettyAmount
-                           ).toFixed(3) +
-                           data?.pricing?.reserve?.previousBids[0].pricing.currency
-                             .symbol
-                         : "Sold"}
-                  </span>
-                </div>
-              )}
-
-              <div className='flex flex-col mb-5'>
-                <p className='text-gray-400 text-xs font-bold mb-2'>MINTER</p>
-                <div className='flex items-center'>
-                  <img
-                    src={'/images/icon.png'}
-                    className='w-7 h-7 rounded-full'
-                  />
-                  <p className='font-bold text-base ml-2'>
-                    {data?.nft?.creator &&
-                      `${data?.nft?.creator.slice(
-                        0,
-                        6
-                      )}...${data?.nft?.creator.slice(
-                        data?.nft?.creator.length - 4,
-                        data?.nft?.creator.length
-                      )}`}
-                  </p>
-                </div>
-              </div>
-              <div className='flex flex-col mb-5'>
-                <p className='text-gray-400 text-xs mb-2 font-bold'>OWNER</p>
-                <div className='flex items-center'>
-                  <img
-                    src={'/images/icon.png'}
-                    className='w-7 h-7 rounded-full'
-                  />
-                  <p className='font-bold text-base ml-2'>
-                    {data?.nft?.owner &&
-                      `${data?.nft?.owner.slice(
-                        0,
-                        6
-                      )}...${data?.nft?.owner.slice(
-                        data?.nft?.owner.length - 4,
-                        data?.nft?.owner.length
-                      )}`}
-                  </p>
-                </div>
-              </div>
-              <hr />
-              {data?.pricing?.reserve?.status === "Active" && (
+          <AuctionDetails data={data} tokenInfo={tokenInfo} tokenData={tokenData}>
+          {data?.pricing?.reserve?.status === "Active" && (
                 <Link
                   href={`/token/${tokenInfo?.tokenContract}/${tokenInfo?.tokenId}/auction/bid`}
                 >
@@ -509,8 +176,7 @@ const Token = ({ id, contract }) => {
                        <span className='text-gray-400 text-xs mb-2 font-bold'>{data?.pricing?.reserve?.status}</span>
                        </div>
                      </div>)}
-            </div>
-          </div>
+          </AuctionDetails>
         </div>
       </div>
     </>

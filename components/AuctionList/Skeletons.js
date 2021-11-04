@@ -3,7 +3,7 @@ import { Col } from "antd";
 
 const array = [1,2,3,4,5,6,7,8]
 
-export const Skeletons = ({ tokenData, loading}) => {
+const Skeletons = ({ each}) => {
 return (
     <Col
     sm={24}
@@ -32,3 +32,4 @@ return (
 )
 };
   
+export default Skeletons;

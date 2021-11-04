@@ -1,8 +1,6 @@
 import {
   constructMediaData,
   sha256FromBuffer,
-  generateMetadata,
-  isMediaDataVerified,
   Zora,
   constructBidShares,
 } from "@zoralabs/zdk";
@@ -10,25 +8,21 @@ import { Steps, Button, message, Image } from "antd";
 import { noImage } from "../../helpers/no-image";
 import React, { useState, useEffect, useContext } from "react";
 import { GlobalContext } from "../../contexts/provider";
-import DocViewer from "react-doc-viewer";
 import { Upload } from "antd";
-import { InboxOutlined } from "@ant-design/icons";
 import { Tabs, Row, notification } from "antd";
-import { Img } from "react-image";
 import ReactAudioPlayer from "react-audio-player";
 const { TabPane } = Tabs;
-import { useEthers, useEtherBalance } from "@usedapp/core";
-// import { IpfsClient } from 'provide-js';
-// import fileReaderPullStream from 'pull-file-reader';
+import { useEthers } from "@usedapp/core";
 import ipfs from "../../helpers/ipfs";
-import ReactPlayer from "react-player";
 import { Player } from "video-react";
-import { Wallet, ethers, BigNumberish, BigNumber } from "ethers";
+import { ethers } from "ethers";
 import * as actions from "../../contexts/actions";
 import { useRouter } from "next/router";
-// const ipfs = new IpfsClient('http', 'localhost', 5001, '/api/v0/');
-
-// const client = ipfsHttpClient('https://ipfs.infura.io:5001/api/v0/')
+import ImageDrop from './ImageDrop'
+import AudioDrop from './AudioDrop'
+import TextDrop from './TextDrop'
+import VideoDrop from './VideoDrop';
+import NFTForm from './NFTForm';
 
 const { Step } = Steps;
 
@@ -87,14 +81,9 @@ const Mint = () => {
   const [isloggedin, setIsloggedin] = useState(false);
   const [mintLoading, setMintLoading] = useState(false);
   const {
-    activateBrowserWallet,
     account,
     chainId,
-    error,
-    deactivate,
-    activate,
     active,
-    library,
   } = useEthers();
   const [signer, setSigner] = useState({});
   const router = useRouter();
@@ -105,12 +94,9 @@ const Mint = () => {
     ) {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       setSigner(provider.getSigner());
-      // other stuff using provider here
       console.log(window.ethereum);
     }
   }, []);
-
-  console.log(mintLoading);
 
   async function uploadToDecentralizedStorage(data) {
     try{
@@ -135,13 +121,6 @@ const Mint = () => {
     setMintLoading
   ) => {
     const zora = new Zora(signer, parseInt(process.env.NEXT_PUBLIC_NETWORK_ID));
-    // const metadataJSON = generateMetadata('zora-20200101', {
-    //   description: Description,
-    //   mimeType,
-    //   image_url: fileUrl,
-    //   name,
-    //   version: 'zora-20210604',
-    // })
 
     const metadata = {
       version: "zora-20211001",
@@ -153,15 +132,11 @@ const Mint = () => {
 
     const JsonFormat = JSON.stringify(metadata);
 
-    // const contentURI = await uploadToDecentralizedStorage(content);
     try{
     const metadataURI = await uploadToDecentralizedStorage(
       Buffer.from(JsonFormat)
     );
-    
-
     const mintContent = content !== "" || undefined ? content : fileUrl;
-
     const contentHash = sha256FromBuffer(mintContent);
     const metadataHash = sha256FromBuffer(Buffer.from(JsonFormat));
     const mediaData = constructMediaData(
@@ -171,26 +146,14 @@ const Mint = () => {
       metadataHash
     );
 
-
-    // // Verifies hashes of content to ensure the hashes match
-    
-    // const verified = await isMediaDataVerified(mediaData);
-    // console.log('verification', verified)
-    // if (!verified){
-    //   throw new Error("MediaData not valid, do not mint");
-    // }
-
     const creatorPercentage = parseInt(feePercantage);
     setMintLoading(true);
-    // // BidShares should sum up to 100%
     const bidShares = constructBidShares(
-      parseInt(feePercantage), // creator share percentage
-      100 - creatorPercentage, // owner share percentage
-      0 // prevOwner share percentage
+      parseInt(feePercantage),
+      100 - creatorPercentage,
+      0
     );
     const tx = await zora.mint(mediaData, bidShares);
-
-    console.log(tx)
     if (tx) {
       setMintLoading(false);
       notification["success"]({
@@ -203,7 +166,6 @@ const Mint = () => {
       }, 3000);
     }
     return new Promise((resolve) => {
-      // This listens for the nft transfer event
       zora.media.on("Transfer", (from, to, tokenId) => {
         if (
           from === "0x0000000000000000000000000000000000000000" &&
@@ -257,7 +219,6 @@ const Mint = () => {
     setShowModal,
   } = useContext(GlobalContext);
   const openModal = () => {
-    // setIsModalVisible(true);
     actions.changeAuthModal(!showModal)(setShowModal);
   };
 
@@ -492,53 +453,12 @@ const Mint = () => {
               <Step key={item.title} title={item.title} />
             ))}
           </Steps>
-          {/* <div className='steps-content'>{steps[current].content}</div> */}
           <div className='w-10/12 m-auto mt-9 text-center'>
             {current === 0 && (
               <Tabs defaultActiveKey='1' centered>
                 <TabPane tab='Image' key='1'>
                   <Dragger openFileDialogOnClick={false} {...propsImage}>
-                    {!fileUrl &&
-                      !buffer &&
-                      ImgLoading === false &&
-                      Imgupload == false && (
-                        <>
-                          <p className='ant-upload-drag-icon'>
-                            <InboxOutlined />
-                          </p>
-                          <p className='ant-upload-text'>
-                            Drag Image to this area to upload
-                          </p>
-                          <p className='ant-upload-hint'>
-                            Support for a single or bulk upload. Strictly
-                            prohibit from uploading company data or other band
-                            files
-                          </p>
-                        </>
-                      )}
-                    {fileUrl && buffer && Imgupload && ImgLoading === false && (
-                      <>
-                        <p className='text-gray-400'>
-                          Your image preview loading ...
-                        </p>
-                        <div className='flex flex-row justify-around'>
-                          <Image
-                            width='20%'
-                            src={fileUrl}
-                            fallback={noImage}
-                            preview={false}
-                          />
-                        </div>
-                      </>
-                    )}
-                    {ImgLoading && (
-                      <div className='flex flex-row justify-around'>
-                        <img
-                          className='text-white w-20 h-20 animate-spin mx-4 text-center z-20 ant-upload-drag-icon '
-                          src='/images/spinner.png'
-                        />
-                      </div>
-                    )}
+                    <ImageDrop fileUrl={fileUrl} buffer={buffer} ImgLoading={ImgLoading} Imgupload={Imgupload}/>
                   </Dragger>
                 </TabPane>
                 <TabPane
@@ -549,49 +469,7 @@ const Mint = () => {
                   key='2'
                 >
                   <Dragger openFileDialogOnClick={false} {...propsAudio}>
-                    {!audioUrl &&
-                      !bufferAudio &&
-                      AudioLoading === false &&
-                      Audioupload === false && (
-                        <>
-                          <p className='ant-upload-drag-icon'>
-                            <InboxOutlined />
-                          </p>
-                          <p className='ant-upload-text'>
-                            Drag Audio to this area to upload
-                          </p>
-                          <p className='ant-upload-hint'>
-                            Support for a single or bulk upload. Strictly
-                            prohibit from uploading company data or other band
-                            files
-                          </p>
-                        </>
-                      )}
-                    {audioUrl &&
-                      bufferAudio &&
-                      Audioupload &&
-                      AudioLoading === false && (
-                        <>
-                          <p className='text-gray-400'>
-                            Your Audio preview loading ...
-                          </p>
-                          <div className='flex flex-row justify-around'>
-                            <ReactAudioPlayer
-                              src={audioUrl}
-                              controls
-                              autoPlay
-                            />
-                          </div>
-                        </>
-                      )}
-                    {AudioLoading && (
-                      <div className='flex flex-row justify-around'>
-                        <img
-                          className='text-white w-20 h-20 animate-spin mx-4 text-center z-20 ant-upload-drag-icon '
-                          src='/images/spinner.png'
-                        />
-                      </div>
-                    )}
+                    <AudioDrop audioUrl={audioUrl} bufferAudio={bufferAudio} AudioLoading={AudioLoading} Audioupload={Audioupload} />
                   </Dragger>
                 </TabPane>
                 <TabPane
@@ -602,52 +480,7 @@ const Mint = () => {
                   key='3'
                 >
                   <Dragger openFileDialogOnClick={false} {...propsVideo}>
-                    {!videoUrl &&
-                      !bufferVideo &&
-                      Videoupload == false &&
-                      VideoLoading === false && (
-                        <>
-                          <p className='ant-upload-drag-icon'>
-                            <InboxOutlined />
-                          </p>
-                          <p className='ant-upload-text'>
-                            Drag Video to this area to upload
-                          </p>
-                          <p className='ant-upload-hint'>
-                            Support for a single or bulk upload. Strictly
-                            prohibit from uploading company data or other band
-                            files
-                          </p>
-                        </>
-                      )}
-                    {videoUrl &&
-                      bufferVideo &&
-                      Videoupload &&
-                      VideoLoading === false && (
-                        <>
-                          <p className='text-gray-400'>
-                            Your Video preview loading ...
-                          </p>
-                          <div className='flex flex-row justify-around'>
-                            <ReactPlayer
-                              url={videoUrl}
-                              className='h-72 w-full object-cover card-img-top rounded-t-lg'
-                            />
-                            {/* <Player
-                    playsInline
-                    src={videoUrl}
-                  /> */}
-                          </div>
-                        </>
-                      )}
-                    {VideoLoading && (
-                      <div className='flex flex-row justify-around'>
-                        <img
-                          className='text-white w-20 h-20 animate-spin mx-4 text-center z-20 ant-upload-drag-icon '
-                          src='/images/spinner.png'
-                        />
-                      </div>
-                    )}
+                   <VideoDrop videoUrl={videoUrl} bufferVideo={bufferVideo} VideoLoading={VideoLoading} Videoupload={Videoupload} />
                   </Dragger>
                 </TabPane>
                 <TabPane
@@ -658,92 +491,14 @@ const Mint = () => {
                   key='4'
                 >
                   <Dragger openFileDialogOnClick={false} {...propsText}>
-                    {!textUrl &&
-                      !bufferText &&
-                      Textupload == false &&
-                      TextLoading === false && (
-                        <>
-                          <p className='ant-upload-drag-icon'>
-                            <InboxOutlined />
-                          </p>
-                          <p className='ant-upload-text'>
-                            Drag Text to this area to upload
-                          </p>
-                          <p className='ant-upload-hint'>
-                            Support for a single or bulk upload. Strictly
-                            prohibit from uploading company data or other band
-                            files
-                          </p>
-                        </>
-                      )}
-                    {textUrl &&
-                      bufferText &&
-                      Textupload &&
-                      TextLoading === false && (
-                        <>
-                          <p className='text-gray-400'>
-                            Your Text preview loading ...
-                          </p>
-                          <div className='flex flex-row justify-around'>
-                            <DocViewer documents={[{ uri: textUrl }]} />
-                          </div>
-                        </>
-                      )}
-                    {TextLoading && (
-                      <div className='flex flex-row justify-around'>
-                        <img
-                          className='text-white w-20 h-20 animate-spin mx-4 text-center z-20 ant-upload-drag-icon '
-                          src='/images/spinner.png'
-                        />
-                      </div>
-                    )}
+                    <TextDrop textUrl={textUrl} bufferText={bufferText} TextLoading={TextLoading} Textupload={Textupload} />
                   </Dragger>
                 </TabPane>
               </Tabs>
             )}
 
             {current === 1 && (
-              <div className='my-2 p-5'>
-                <p className='text-2xl font-bold mb-5'>Metadata content</p>
-                <div class='w-full my-2 flex flex-col items-center content-center'>
-                  <div class='mb-4 w-12/13 md:w-1/2 text-justify'>
-                    <label
-                      class='block text-gray-400 text-sm mb-2 font-bold'
-                      for='name'
-                    >
-                      Name
-                    </label>
-                    <input
-                      value={name}
-                      onChange={(e) => {
-                        setName(e.target.value);
-                      }}
-                      class='shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline'
-                      id='name'
-                      type='text'
-                      placeholder='Name'
-                    />
-                  </div>
-                  <div class='mb-6 w-12/13 md:w-1/2 text-justify'>
-                    <label
-                      class='block text-gray-400 text-sm mb-2 font-bold'
-                      for='Description'
-                    >
-                      description
-                    </label>
-                    <textarea
-                      value={Description}
-                      onChange={(e) => {
-                        setDescription(e.target.value);
-                      }}
-                      class='shadow appearance-none border h-20 rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline'
-                      id='Description'
-                      type='Description'
-                      placeholder='Description'
-                    />
-                  </div>
-                </div>
-              </div>
+              <NFTForm name={name} setName={setName} Description={Description} setDescription={setDescription} />
             )}
 
             {current === 2 && (
