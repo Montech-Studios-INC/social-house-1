@@ -25,6 +25,7 @@ import { noImage } from "../../helpers/no-image";
 import ReactPlayer from 'react-player'
 import Countdown from 'react-countdown'
 import moment from "moment";
+import Skeletons from './Skeletons'
 
 const array = [1, 2, 3, 4, 5, 6, 7, 8];
 
@@ -179,11 +180,6 @@ export const AuctionsList = () => {
   useLazyLoading(".card-img-top", tokenData.tokens);
   useInfiniteScroll(bottomBoundaryRef, pagerDispatch);
 
-  // console.log('sliced', ListSplicer)
-
-  // const {metadata} = useNFTMetadata(data && data.metadataURI);
-  // const { data, error } = useNFT('0xe8e1b3125372e4912773357691AeB7C305584751', '1')
-  console.log(tokenData)
   return (
     <Wrapper>
       <div
@@ -195,6 +191,7 @@ export const AuctionsList = () => {
           loading === false &&
           list.map((token) => {
             const tokenInfo = FetchStaticData.getIndexerServerTokenInfo(token);
+            console.log(tokenInfo, tokenData)
             return (
               <div className=" w-full sm:w-full md:w-1/2 lg:w-1/4">
               <div
@@ -215,15 +212,6 @@ export const AuctionsList = () => {
                 )}
                 {(tokenInfo.metadata?.mimeType?.split("/")[0] === "video" &&
                   !tokenInfo?.metadata?.body) && (
-                  // <Image
-                  //   align='center'
-                  //   preview={false}
-                  //   height={300}
-                  //   width="100%"
-                  //   className='h-72 w-full object-cover card-img-top rounded-t-lg'
-                  //   src={tokenInfo.image}
-                  //   fallback={noImage}
-                  // />
                   <ReactPlayer url={tokenInfo?.image} playing loop className='h-72 w-full object-cover card-img-top rounded-t-lg'/>
                 )}
                   {tokenInfo.metadata?.body &&
@@ -314,7 +302,7 @@ export const AuctionsList = () => {
                                         ?.amount
                                     )
                                   ).toFixed(3) + " ETH"
-                                : "N/A"}
+                                : "No bid yet"}
                             </span>
                           </Col>
                         )}
@@ -332,7 +320,7 @@ export const AuctionsList = () => {
                                         ?.lastBidAmount
                                     )
                                   ).toFixed(3) + " ETH"
-                                : "N/A"}
+                                : "Not sold yet"}
                             </span>
                           </Col>
                         )}
@@ -387,29 +375,7 @@ export const AuctionsList = () => {
           tokenData.tokens.length == 0 ||
           loading === true) &&
           array.map((each) => (
-            <Col
-              sm={24}
-              md={10}
-              lg={5}
-              key={each}
-              className=' bg-white mx-4 h-9/12 mb-5 rounded-lg border-2 flex flex-col w-full border-gray-100 shadow-md hover:shadow-xd cursor-pointer'
-            >
-              <div className='h-72 w-full object-cover bg-gray-200 animate-pulse  card-img-top rounded-t-lg'></div>
-              <div className='flex flex-col flex-1 gap-5 sm:p-2 p-4'>
-                <div className='flex flex-col flex-1 gap-5 sm:p-2'>
-                  <div className='flex flex-1 flex-col gap-3'>
-                    <div className='bg-gray-200 w-full animate-pulse h-14 rounded-2xl'></div>
-                    <div className='bg-gray-200 w-full animate-pulse h-3 rounded-2xl'></div>
-                    <div className='bg-gray-200 w-full animate-pulse h-3 rounded-2xl'></div>
-                  </div>
-                  <div className='mt-auto flex gap-3'>
-                    <div className='bg-gray-200 w-20 h-8 animate-pulse rounded-full'></div>
-                    <div className='bg-gray-200 w-20 h-8 animate-pulse rounded-full'></div>
-                    <div className='bg-gray-200 w-20 h-8 animate-pulse rounded-full ml-auto'></div>
-                  </div>
-                </div>
-              </div>
-            </Col>
+            <Skeletons each={each} />
           ))}
         {showMore && tokenData.fetching === false && (
           <div className='w-full mb-3 text-center'>

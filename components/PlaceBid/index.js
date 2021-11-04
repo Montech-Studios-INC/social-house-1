@@ -1,39 +1,25 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useContext,
-  useReducer,
-} from "react";
+import React, {useState,useEffect,useContext,useReducer,} from "react";
 import { GlobalContext } from "../../contexts/provider";
-import { NFTPreview } from "@zoralabs/nft-components";
 import { useRouter } from "next/router";
-import Wrapper from "../Wrapper/index";
-import { useZNFT, useNFTMetadata } from "@zoralabs/nft-hooks";
-import { MediaConfiguration } from "@zoralabs/nft-components";
-import {
-  FetchStaticData,
-  MediaFetchAgent,
-  NetworkIDs,
-} from "@zoralabs/nft-hooks";
+import { useNFTMetadata } from "@zoralabs/nft-hooks";
+import { FetchStaticData, MediaFetchAgent } from "@zoralabs/nft-hooks";
 import { useNFT } from "@zoralabs/nft-hooks";
 import { formatEther, parseEther } from "@ethersproject/units";
 import Link from "next/link";
 import { noImage } from "../../helpers/no-image";
-import { FullScreen, useFullScreenHandle } from "react-full-screen";
-import ReactAudioPlayer from "react-audio-player";
 import moment from "moment";
-import { Row, Col, Progress, Image } from "antd";
-import { useWeb3Context } from "web3-react";
+import { Row, Col, Image } from "antd";
 import { useEthers, useEtherBalance } from "@usedapp/core";
 import * as actions from "../../contexts/actions";
 import { Zora } from "@zoralabs/zdk";
-import { Wallet, ethers, BigNumberish, BigNumber } from "ethers";
-import { AuctionHouse, Decimal } from "@zoralabs/zdk";
-import { Button, notification, Space } from "antd";
+import {ethers } from "ethers";
+import { AuctionHouse } from "@zoralabs/zdk";
+import { notification } from "antd";
 import { formatUnits } from "@zoralabs/core/node_modules/@ethersproject/units";
 import { Divider } from "antd";
 import Countdown from 'react-countdown'
+import { Typography } from "@mui/material";
+import {pageReducer, imgReducer} from '../../helpers/reducers'
 
 let tokenInfo;
 
@@ -58,16 +44,7 @@ export const useFetch = (data, dispatch, id, contract) => {
 };
 
 const PlaceBid = ({ id, contract }) => {
-  const {
-    activateBrowserWallet,
-    account,
-    chainId,
-    error,
-    deactivate,
-    activate,
-    active,
-    library,
-  } = useEthers();
+  const { activateBrowserWallet,account,chainId,active} = useEthers();
   const etherBalance = useEtherBalance(account);
   const [isloggedin, setIsloggedin] = useState(false);
   const router = useRouter();
@@ -75,7 +52,6 @@ const PlaceBid = ({ id, contract }) => {
   const [previousBidAmount, setPreviousBid] = useState(0);
   const [bidPlaced, setBidPlaced] = useState(false);
   const [loading, setLoading] = useState(false);
-  const rpcURL = process.env.NEXT_PUBLIC_RPC_URL;
   const [signer, setSigner] = useState({});
 
   useEffect(async () => {
@@ -85,22 +61,18 @@ const PlaceBid = ({ id, contract }) => {
     ) {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       setSigner(provider.getSigner());
-      // other stuff using provider here
     }
   }, []);
 
-  // const provider = new ethers.providers.JsonRpcProvider(rpcURL);
-  // let wallet = new Wallet(account)
-  // wallet = wallet.connect(library)
+  const handleCountDown = (startTime, currentTime, endTime) => {
+    const diff = Math.abs(startTime - endTime);
+    const time_used = Math.abs(startTime - currentTime);
+    const percentage = (time_used * 100) / diff;
+    console.log(percentage)
+  };
 
-  // let privateKey = "0df9a9aad13c712ff0b372e754a6d84b23b64ad60769d463ac4d3ab449cc8e07";
-  // let wallet = new ethers.Wallet(account);
+  const [percent, setPercent] = useState("100%");
 
-  // Connect a wallet to mainnet
-  // let provider = ethers.getDefaultProvider();
-  // let walletWithProvider = new ethers.Wallet(privateKey, provider);
-
-  // const provider = new ethers.providers.Web3Provider(typeof window !== "undefined" ? window.ethereum : '')
   async function  handlePlaceBid (
     e,
     auctionId,
@@ -159,34 +131,14 @@ const PlaceBid = ({ id, contract }) => {
       setIsloggedin(false);
     }
   }, [account, chainId, active]);
-
-  const imgReducer = (state, action) => {
-    switch (action.type) {
-      case "STACK_TOKEN":
-        return { ...state, token: state.token.concat(action.token) };
-      case "FETCHING_TOKEN":
-        return { ...state, fetching: action.fetching };
-      default:
-        return state;
-    }
-  };
   const {
     showModalState: { showModal },
     setShowModal,
   } = useContext(GlobalContext);
   const openModal = () => {
-    // setIsModalVisible(true);
     actions.changeAuthModal(!showModal)(setShowModal);
   };
 
-  const pageReducer = (state, action) => {
-    switch (action.type) {
-      case "ADVANCE_PAGE":
-        return { ...state, page: state.page + 1 };
-      default:
-        return state;
-    }
-  };
 
   const [tokenData, imgDispatch] = useReducer(imgReducer, {
     token: [],
@@ -196,7 +148,6 @@ const PlaceBid = ({ id, contract }) => {
   useFetch(pager, imgDispatch, id, contract);
 
   const { data } = useNFT(contract, id);
-  const { metadata } = useNFTMetadata(data && data.metadataURI);
   let newBid;
   useEffect(() => {
     const highestBid = data?.pricing?.reserve?.current.highestBid?.pricing
@@ -216,17 +167,9 @@ const PlaceBid = ({ id, contract }) => {
     setAmount(newBid);
   }, [newBid, previousBidAmount]);
 
-  const getAuction = async (auctionId) => {
-    const zora = new Zora(signer, parseInt(process.env.NEXT_PUBLIC_NETWORK_ID));
-
-    const auctionHouse = new AuctionHouse(
-      signer,
-      parseInt(process.env.NEXT_PUBLIC_NETWORK_ID)
-    );
-    const auction = await auctionHouse.fetchAuction(auctionId);
-  };
-
-  console.log(data?.pricing?.reserve)
+  useEffect(() => {
+    handleCountDown(parseInt(data?.pricing?.reserve?.approvedTimestamp), Date.now() / 1000, parseInt(data?.pricing?.reserve?.expectedEndTimestamp));
+  }, []);
 
   return (
     <>
@@ -414,6 +357,7 @@ const PlaceBid = ({ id, contract }) => {
               <p>Your bid must be atleast  {previousBidAmount} ETH</p>
               <p>The next bid must be atleast 5% of the current bid </p>
               <p>The Reserve price is {data?.pricing?.reserve.reservePrice.prettyAmount} {data?.pricing?.reserve.reservePrice.currency.symbol}</p>
+
               <button
                 className={`bg-black text-white font-bold rounded px-4 py-4 outline-none w-full mt-6 ${
                   amount < previousBidAmount

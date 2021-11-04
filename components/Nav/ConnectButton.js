@@ -158,11 +158,6 @@ export default function ConnectButton({ handleOpenModal }) {
 
   return account ? (
     <div className='hidden xl:flex lg:flex md:flex flex-row justify-end '>
-      {/* <div className="bg-gray-300">
-        <Text color="gray-400" className="m-2" fontSize="md">
-          {etherBalance && parseFloat(formatEther(etherBalance)).toFixed(3)} ETH
-        </Text>
-      </div> */}
       <Button
         onClick={handleOpenModal}
         bg={"black"}
@@ -206,7 +201,7 @@ export default function ConnectButton({ handleOpenModal }) {
               d='M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z'
             />
           </svg>
-          <p className='text-gray-200 text-sm mb-5'>New</p>
+          <p className='text-gray-200 text-md mb-5'>New</p>
         </button>
       </Dropdown>
     </div>
